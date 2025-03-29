@@ -1,0 +1,8 @@
+flask
+pytest
+pytest-flask
+peewee
+markupsafe
+flask-cors
+requests
+flask-sqlalchemy

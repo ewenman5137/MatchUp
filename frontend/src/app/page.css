@@ -1,0 +1,138 @@
+#Accueil{
+    background-color: white;
+    color: black;
+}
+
+#header{
+    width: 100%;
+    height: 100vh;
+    display: flex;
+}
+#imageAccueil{
+    height: 100%;
+    margin-right: -53%;
+}
+#header #containeurText{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    font-size: 1.5rem;
+    background-color: rgba(0, 0, 0, 0.342);
+    padding-left: 3%;
+    padding-right: 3%;
+    color: white;
+}
+#containeurText h1{
+    font-size: 3rem;
+    font-weight: bold;
+}
+.titre{
+    display: flex;
+    flex-direction: row;
+    margin: 3% 2%;
+    width: 96%;
+    align-items: center;
+}
+.titre h2{
+    width: 100%;
+    text-align: center;
+    font-size: 1.5rem;
+}
+.titre .barreSeparation{
+    background-color: black;
+    height: 3px;
+    width: 100%;
+}
+#containeurFonctionnementService{
+    display: flex;
+    flex-direction: row;
+    width: 90%;
+    margin-left: 5%;
+    align-items: center;
+    font-size: 1.2rem;
+}
+
+#containeurReservationSport {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 90%;
+    height: 60vh;
+    margin-left: 5%;
+    transition: all 0.3s ease-in-out;
+}
+
+.sportAfficher {
+    width: 50%;
+    transition: all 0.3s ease-in-out;
+}
+
+.sportAfficher img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.sportPetit {
+    width: 30%;
+    height: 100%;
+    transition: all 0.3s ease-in-out;
+}
+
+.sportPetit .imagePetiteImage {
+    height: 60vh;
+    width: 100%;
+    margin-bottom: -15%;
+    border-radius: 5px;
+    object-fit: cover;
+    max-width: none;
+}
+
+.sportPetit:hover {
+    width: 50%;
+    cursor: pointer;
+}
+
+
+.btnReservation{
+    width: 80%;
+    height: 10%;
+    margin-left: 10%;
+    border: 1px white solid;
+    color: white;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 5px;
+}
+
+#containeurSportEquipe{
+    display: flex;
+    flex-direction: row;
+    width: 90%;
+    margin-left: 5%;
+    justify-content: space-between;
+    padding-bottom: 20vh;
+    color: white;
+}
+.sport{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.sport img{
+    height: 70%;
+    width: 100%;
+    object-fit: cover;
+}
+.sport a{
+    background-color: #6F803F;
+    height: 20%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+}
+
+.sport a:hover{
+    cursor: pointer;
+    text-decoration: underline;
+}
