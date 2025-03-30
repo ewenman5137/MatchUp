@@ -10,18 +10,19 @@ type Props = {
 };
 
 const sports = ["Tennis", "Badminton", "Pickleball"];
-const hours = ["15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"];
 
-function generateNext8Days(): string[] {
+function generateNext8Days(): { label: string; iso: string }[] {
   const jours = ["Dim.", "Lun.", "Mar.", "Mer.", "Jeu.", "Ven.", "Sam."];
   const today = new Date();
-  const result: string[] = [];
+  const result: { label: string; iso: string }[] = [];
 
   for (let i = 0; i < 8; i++) {
-    const date = new Date(today);
-    date.setDate(today.getDate() + i);
-    const label = `${jours[date.getDay()]} ${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}`;
-    result.push(i === 0 ? `Aujourd'hui (${label})` : label);
+    const date = new Date(today.getTime());
+    date.setDate(date.getDate() + i);
+    const label = `${i === 0 ? "Aujourd'hui" : jours[date.getDay()]
+      } ${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}`;
+    const iso = date.toISOString().split("T")[0];
+    result.push({ label, iso });
   }
 
   return result;
@@ -34,19 +35,32 @@ export default function SportSelector({ title, breadcrumb, restrictionNote }: Pr
   const mode = searchParams.get("mode") || "jouer_amis";
   const sportFromURL = searchParams.get("sport");
 
-  const [dates, setDates] = useState<string[]>([]);
+  const [dates, setDates] = useState<{ label: string; iso: string }[]>([]);
   const [selectedSport, setSelectedSport] = useState<string>("Tennis");
-  const [selectedDate, setSelectedDate] = useState<string>("");
+  const [selectedDate, setSelectedDate] = useState<{ label: string; iso: string } | null>(null);
   const [selectedHours, setSelectedHours] = useState<string[]>([]);
+  const [availableHours, setAvailableHours] = useState<string[]>([]);
 
   useEffect(() => {
     const generatedDates = generateNext8Days();
     setDates(generatedDates);
     setSelectedDate(generatedDates[0]);
-    if (sportFromURL) {
-      setSelectedSport(sportFromURL);
-    }
+    if (sportFromURL) setSelectedSport(sportFromURL);
   }, [sportFromURL]);
+
+  useEffect(() => {
+    if (!selectedSport || !selectedDate) return;
+
+    fetch(`http://localhost:5000/disponibilites?sport=${selectedSport}&date=${selectedDate.iso}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setAvailableHours(data.available_hours || []);
+        setSelectedHours([]);
+      })
+      .catch((err) => {
+        console.error("Erreur de chargement des créneaux :", err);
+      });
+  }, [selectedSport, selectedDate]);
 
   const handleSportChange = (sport: string) => {
     setSelectedSport(sport);
@@ -76,32 +90,27 @@ export default function SportSelector({ title, breadcrumb, restrictionNote }: Pr
   };
 
   const handleContinue = () => {
-    if (selectedHours.length !== 2) {
-      alert("Veuillez sélectionner deux créneaux horaires.");
+    if (selectedHours.length === 0) {
+      alert("Veuillez sélectionner au moins un créneau horaire.");
       return;
     }
-
-    const [heure1, heure2] = selectedHours.map(h => parseInt(h));
-    if (Math.abs(heure1 - heure2) !== 1) {
-      alert("Les créneaux doivent être consécutifs (ex : 18:00 et 19:00)");
+    
+    if (selectedHours.length > 2) {
+      alert("Vous ne pouvez réserver qu'une ou deux heures maximum.");
       return;
     }
+    
+    const heures = selectedHours.map(h => parseInt(h)).sort((a, b) => a - b);
+    const heureDebut = heures[0].toString().padStart(2, "0") + ":00";
+    const heureFin = ((heures[selectedHours.length - 1]) + 1).toString().padStart(2, "0") + ":00";
+    
 
-    const heureDebut = Math.min(heure1, heure2).toString().padStart(2, "0") + ":00";
-    const heureFin = (Math.max(heure1, heure2) + 1).toString().padStart(2, "0") + ":00";
 
-    console.log("🎯 Sauvegarde sessionStorage :", {
-      date: selectedDate,
-      heureDebut,
-      heureFin,
-      sport: selectedSport
-    });
-
-    sessionStorage.setItem("reservation_date", selectedDate);
+    sessionStorage.setItem("reservation_date", selectedDate?.iso || "");
     sessionStorage.setItem("reservation_heure_debut", heureDebut);
     sessionStorage.setItem("reservation_heure_fin", heureFin);
     sessionStorage.setItem("reservation_sport", selectedSport.toLowerCase());
-    sessionStorage.setItem("reservation_id", "3"); // ID fictif ou réel selon besoin
+    sessionStorage.setItem("reservation_id", "3"); // ID fictif ou réel
 
     router.push(`/reservation/form?mode=${mode}`);
   };
@@ -130,35 +139,39 @@ export default function SportSelector({ title, breadcrumb, restrictionNote }: Pr
           </div>
 
           <div className="flex space-x-2 overflow-auto mb-4">
-            {dates.map((date) => (
+            {dates.map((dateObj) => (
               <label
-                key={date}
+                key={dateObj.iso}
                 className={`flex flex-col items-center px-4 py-2 rounded-lg cursor-pointer border border-gray-300 ${
-                  selectedDate === date ? "bg-gray-300" : ""
+                  selectedDate?.iso === dateObj.iso ? "bg-gray-300" : ""
                 }`}
                 onClick={() => {
-                  setSelectedDate(date);
+                  setSelectedDate(dateObj);
                   setSelectedHours([]);
                 }}
               >
-                {date}
+                {dateObj.label}
               </label>
             ))}
           </div>
 
           <div className="space-y-2">
-            {hours.map((hour) => (
-              <div
-                key={hour}
-                className={`w-full flex justify-between items-center px-4 py-2 rounded-lg cursor-pointer border border-gray-300 ${
-                  selectedHours.includes(hour) ? "bg-gray-300" : ""
-                }`}
-                onClick={() => toggleHourSelection(hour)}
-              >
-                {hour}
-                <span>&#x276F;</span>
-              </div>
-            ))}
+            {availableHours.length === 0 && selectedDate ? (
+              <p className="text-sm text-red-500">Aucun créneau disponible ce jour-là.</p>
+            ) : (
+              availableHours.map((hour) => (
+                <div
+                  key={hour}
+                  className={`w-full flex justify-between items-center px-4 py-2 rounded-lg cursor-pointer border border-gray-300 ${
+                    selectedHours.includes(hour) ? "bg-gray-300" : ""
+                  }`}
+                  onClick={() => toggleHourSelection(hour)}
+                >
+                  {hour}
+                  <span>&#x276F;</span>
+                </div>
+              ))
+            )}
           </div>
         </form>
       </div>
@@ -174,7 +187,7 @@ export default function SportSelector({ title, breadcrumb, restrictionNote }: Pr
           </div>
           <div className="mt-4">
             <p className="text-sm text-gray-500">1 terrain</p>
-            <p className="text-sm text-gray-500">{selectedDate} {getFormattedHours()}</p>
+            <p className="text-sm text-gray-500">{selectedDate?.label} {getFormattedHours()}</p>
           </div>
           <button type="button" onClick={handleContinue} className="mt-4 w-full bg-green-700 text-white py-2 rounded">
             Continuer
