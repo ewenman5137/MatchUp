@@ -44,3 +44,39 @@ def create_reservation():
     except Exception as e:
         print("❌ Erreur :", str(e))
         return jsonify({"error": "Erreur lors de la création de la réservation"}), 500
+    
+
+@reservation_bp.route('/reservations', methods=['GET'])
+def get_reservations():
+    try:
+        reservations = Reservation.query.all()
+        result = []
+
+        for res in reservations:
+            result.append({
+                "id": res.idReservation,
+                "date": res.dateReservation,
+                "sport": res.sport or "non spécifié",
+                "prix": res.prix or "Gratuit",
+                "lieu": "UQAC, Chicoutimi",
+                "refId": str(res.idReservation).zfill(8),
+                "terrain": "n°1",
+                "horaire": f"{res.heureDebut} à {res.heureFin}",
+                "joueurs": len(res.joueurs) if res.joueurs else 1
+            })
+
+        return jsonify(result), 200
+
+    except Exception as e:
+        print("❌ ERREUR FLASK /reservations :", e)  # 👈 AIDE AU DEBUG
+        return jsonify({"error": "Impossible de charger les réservations"}), 500
+
+
+@reservation_bp.route('/reservation/<int:id>', methods=['DELETE'])
+def delete_reservation(id):
+    reservation = Reservation.query.get(id)
+    if reservation:
+        db.session.delete(reservation)
+        db.session.commit()
+        return jsonify({"message": "Réservation supprimée ✅"}), 200
+    return jsonify({"error": "Réservation introuvable"}), 404

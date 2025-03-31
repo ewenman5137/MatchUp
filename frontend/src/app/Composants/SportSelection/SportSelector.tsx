@@ -19,8 +19,7 @@ function generateNext8Days(): { label: string; iso: string }[] {
   for (let i = 0; i < 8; i++) {
     const date = new Date(today.getTime());
     date.setDate(date.getDate() + i);
-    const label = `${i === 0 ? "Aujourd'hui" : jours[date.getDay()]
-      } ${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}`;
+    const label = `${i === 0 ? "Aujourd'hui" : jours[date.getDay()]} ${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}`;
     const iso = date.toISOString().split("T")[0];
     result.push({ label, iso });
   }
@@ -72,21 +71,30 @@ export default function SportSelector({ title, breadcrumb, restrictionNote }: Pr
   const toggleHourSelection = (hour: string) => {
     if (selectedHours.includes(hour)) {
       setSelectedHours(selectedHours.filter(h => h !== hour));
-    } else if (selectedHours.length < 2) {
-      setSelectedHours([...selectedHours, hour].sort());
+    } else {
+      const newSelection = [...selectedHours, hour].sort();
+      // Vérifie si toutes les heures sont consécutives
+      const isConsecutive = newSelection.every((h, i, arr) => {
+        if (i === 0) return true;
+        return parseInt(arr[i]) === parseInt(arr[i - 1]) + 1;
+      });
+
+      if (isConsecutive) {
+        setSelectedHours(newSelection);
+      } else {
+        alert("Veuillez sélectionner uniquement des heures consécutives.");
+      }
     }
   };
 
   const getFormattedHours = () => {
-    if (selectedHours.length === 2) {
-      const [h1, h2] = selectedHours.map(h => parseInt(h));
-      return h2 === h1 + 1
-        ? `${selectedHours[0]} à ${h2 + 1}:00`
-        : selectedHours.map(h => `${h} à ${parseInt(h) + 1}:00`).join(" | ");
+    if (selectedHours.length > 0) {
+      const heures = selectedHours.map(h => parseInt(h)).sort((a, b) => a - b);
+      const heureDebut = heures[0];
+      const heureFin = heures[heures.length - 1] + 1;
+      return `${heureDebut.toString().padStart(2, "0")}:00 à ${heureFin.toString().padStart(2, "0")}:00`;
     }
-    return selectedHours.length === 1
-      ? `${selectedHours[0]} à ${parseInt(selectedHours[0]) + 1}:00`
-      : "Veuillez sélectionner deux créneaux consécutifs";
+    return "Veuillez sélectionner au moins une heure";
   };
 
   const handleContinue = () => {
@@ -94,23 +102,16 @@ export default function SportSelector({ title, breadcrumb, restrictionNote }: Pr
       alert("Veuillez sélectionner au moins un créneau horaire.");
       return;
     }
-    
-    if (selectedHours.length > 2) {
-      alert("Vous ne pouvez réserver qu'une ou deux heures maximum.");
-      return;
-    }
-    
+
     const heures = selectedHours.map(h => parseInt(h)).sort((a, b) => a - b);
     const heureDebut = heures[0].toString().padStart(2, "0") + ":00";
-    const heureFin = ((heures[selectedHours.length - 1]) + 1).toString().padStart(2, "0") + ":00";
-    
-
+    const heureFin = (heures[heures.length - 1] + 1).toString().padStart(2, "0") + ":00";
 
     sessionStorage.setItem("reservation_date", selectedDate?.iso || "");
     sessionStorage.setItem("reservation_heure_debut", heureDebut);
     sessionStorage.setItem("reservation_heure_fin", heureFin);
     sessionStorage.setItem("reservation_sport", selectedSport.toLowerCase());
-    sessionStorage.setItem("reservation_id", "3"); // ID fictif ou réel
+    sessionStorage.setItem("reservation_id", "3");
 
     router.push(`/reservation/form?mode=${mode}`);
   };
@@ -128,9 +129,7 @@ export default function SportSelector({ title, breadcrumb, restrictionNote }: Pr
             {sports.map((sport) => (
               <label
                 key={sport}
-                className={`px-4 py-2 rounded-full cursor-pointer border border-gray-300 ${
-                  selectedSport === sport ? "bg-green-700 text-white" : ""
-                }`}
+                className={`px-4 py-2 rounded-full cursor-pointer border border-gray-300 ${selectedSport === sport ? "bg-green-700 text-white" : ""}`}
                 onClick={() => handleSportChange(sport)}
               >
                 {sport}
@@ -139,18 +138,16 @@ export default function SportSelector({ title, breadcrumb, restrictionNote }: Pr
           </div>
 
           <div className="flex space-x-2 overflow-auto mb-4">
-            {dates.map((dateObj) => (
+            {dates.map((date) => (
               <label
-                key={dateObj.iso}
-                className={`flex flex-col items-center px-4 py-2 rounded-lg cursor-pointer border border-gray-300 ${
-                  selectedDate?.iso === dateObj.iso ? "bg-gray-300" : ""
-                }`}
+                key={date.iso}
+                className={`flex flex-col items-center px-4 py-2 rounded-lg cursor-pointer border border-gray-300 ${selectedDate?.iso === date.iso ? "bg-gray-300" : ""}`}
                 onClick={() => {
-                  setSelectedDate(dateObj);
+                  setSelectedDate(date);
                   setSelectedHours([]);
                 }}
               >
-                {dateObj.label}
+                {date.label}
               </label>
             ))}
           </div>
@@ -162,9 +159,7 @@ export default function SportSelector({ title, breadcrumb, restrictionNote }: Pr
               availableHours.map((hour) => (
                 <div
                   key={hour}
-                  className={`w-full flex justify-between items-center px-4 py-2 rounded-lg cursor-pointer border border-gray-300 ${
-                    selectedHours.includes(hour) ? "bg-gray-300" : ""
-                  }`}
+                  className={`w-full flex justify-between items-center px-4 py-2 rounded-lg cursor-pointer border border-gray-300 ${selectedHours.includes(hour) ? "bg-gray-300" : ""}`}
                   onClick={() => toggleHourSelection(hour)}
                 >
                   {hour}
