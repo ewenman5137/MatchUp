@@ -15,6 +15,7 @@ type Props = {
   onCancel?: () => void; // callback pour rafraîchir après suppression
 };
 
+
 const ReservationCard = ({
   id,
   date,
@@ -54,6 +55,8 @@ const ReservationCard = ({
       alert("Erreur lors de l'annulation.");
     }
   };
+
+  
 
   return (
     <div className="bg-white p-6 rounded-lg shadow relative">

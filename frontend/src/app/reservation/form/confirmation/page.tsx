@@ -53,18 +53,31 @@ const ReservationConfirmation = () => {
           ) : (
             reservations.map((res) => (
               <ReservationCard
-                key={res.id}
-                id={res.id} // 🔥 C’est ça qu’il manquait
-                date={res.date}
-                sport={res.sport}
-                lieu={res.lieu}
-                refId={res.refId}
-                terrain={res.terrain}
-                horaire={res.horaire}
-                joueurs={res.joueurs}
-                prix={res.prix}
-                onCancel={() => setReservations((prev) => prev.filter((r) => r.id !== res.id))}
-              />
+                  key={res.id}
+                  id={res.id} // ✅ nécessaire pour l'annulation
+                  date={res.date}
+                  sport={res.sport}
+                  lieu={res.lieu}
+                  refId={res.refId}
+                  terrain={res.terrain}
+                  horaire={res.horaire}
+                  joueurs={res.joueurs}
+                  prix={res.prix}
+                  onCancel={() => {
+                    // recharge les réservations à jour après une annulation
+                    fetch("http://localhost:5000/reservations")
+                      .then((res) => res.json())
+                      .then((data) => {
+                        const now = new Date();
+                        const reservationsAVenir = data.filter((res: Reservation) => {
+                          const dateRes = new Date(`${res.date}T${res.horaire?.split(" à ")[0] || "00:00"}`);
+                          return dateRes >= now;
+                        });
+                        setReservations(reservationsAVenir);
+                      });
+                  }}
+                />
+
             ))
           )}
         </div>

@@ -5,13 +5,6 @@ from models.reservation import Reservation  # adapte selon ton arborescence
 
 disponibilites_bp = Blueprint("disponibilites", __name__)
 
-from flask import Blueprint, request, jsonify
-from datetime import datetime
-
-from models import db
-from models.reservation import Reservation
-
-disponibilites_bp = Blueprint("disponibilites", __name__)
 
 @disponibilites_bp.route("/disponibilites", methods=["GET"])
 def get_disponibilites():

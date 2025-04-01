@@ -16,6 +16,12 @@ const modes = [
   },
   {
     id: "rechercher_adversaire",
+    title: "Rechercher un adversaire",
+    icon: "🔍",
+    description: "Laisse une description pour trouver un adversaire.",
+  },
+  {
+    id: "trouver_adversaire",
     title: "Trouver un adversaire",
     icon: "🔍",
     description: "Laisse-nous te trouver un match équitable.",
@@ -45,8 +51,15 @@ export default function Accueil() {
   };
 
   const handleModeClick = (mode: string) => {
-    router.push(`/reservation/form/${mode}?sport=${selectedSport}`);
-  };
+    if (mode === "jouer_amis" || mode === "creer_tournoi" || mode === "rechercher_adversaire") {
+      router.push(`/reservation/form/${mode}?sport=${selectedSport}`);
+    } else if (mode === "inscription_tournoi") {
+      router.push(`/tournoi`);
+    } else {
+      router.push(`/adversaire`);
+    }
+  };  
+  
 
   return (
     <div id="Accueil">
