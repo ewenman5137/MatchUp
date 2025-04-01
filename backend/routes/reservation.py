@@ -80,3 +80,33 @@ def delete_reservation(id):
         db.session.commit()
         return jsonify({"message": "Réservation supprimée ✅"}), 200
     return jsonify({"error": "Réservation introuvable"}), 404
+
+@reservation_bp.route('/api/agenda/disponibilites', methods=['GET'])
+def get_disponibilites():
+    sport = request.args.get("sport")
+    date = request.args.get("date")  # format : YYYY-MM-DD
+
+    horaires = [
+        "8h30 - 9h30", "9h30 - 10h30", "10h30 - 11h30", "11h30 - 12h30",
+        "12h30 - 13h30", "13h30 - 14h30", "14h30 - 15h30"
+    ]
+
+    MAX_RESERVATIONS = 2  # Exemple : 2 terrains disponibles
+
+    disponibilites = []
+
+    for slot in horaires:
+        debut, fin = slot.split(" - ")
+        count = Reservation.query.filter_by(
+            dateReservation=date,
+            heureDebut=debut,
+            heureFin=fin,
+            sport=sport,
+            statutReservation="confirmée"
+        ).count()
+        disponibilites.append({
+            "slot": slot,
+            "disponible": MAX_RESERVATIONS - count
+        })
+
+    return jsonify(disponibilites), 200

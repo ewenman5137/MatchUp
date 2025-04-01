@@ -148,3 +148,23 @@ def get_classement():
         })
 
     return jsonify(data)
+
+
+@utilisateur_bp.route("/api/utilisateurs", methods=["GET"])
+def get_utilisateurs():
+    utilisateurs = Utilisateur.query.all()
+    return jsonify([
+        {
+            "id": u.idUser,
+            "prenom": u.prenom,
+            "nom": u.nom,
+            "email": u.email,
+            "sexe": u.sexe,
+            "langue": u.langue,
+            "nationalite": u.nationalite,
+            "points": u.points,
+            "classement": u.classement,
+            "role": u.roleParticipant,
+        }
+        for u in utilisateurs
+    ])

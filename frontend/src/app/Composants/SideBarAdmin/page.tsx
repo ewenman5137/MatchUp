@@ -55,7 +55,7 @@ export default function SidebarAdmin() {
           <Link href="/admin/user">
             <div
               className={`w-full flex items-center justify-between px-4 py-2 rounded-lg font-medium cursor-pointer ${
-                isActive("/admin/utilisateur")
+                isActive("/admin/user")
                   ? "bg-[#7A874C] text-white"
                   : "text-gray-700 hover:bg-gray-100"
               }`}
