@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import SidebarAdmin from "../../Composants/SideBarAdmin/page";
-import { Check, Edit2, Filter, Plus, X } from "lucide-react";
+import { Edit2, Filter, Plus, X } from "lucide-react";
 
 export default function ComptabilitePage() {
   const [selectedPaiement, setSelectedPaiement] = useState<any | null>(null);
@@ -29,6 +29,30 @@ export default function ComptabilitePage() {
     }
   };
 
+  const revenuMois = paiements.reduce((total, p) => {
+    const date = new Date(p.date);
+    const now = new Date();
+    return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()
+      ? total + parseFloat(p.prix.replace("$", ""))
+      : total;
+  }, 0);
+
+  const getWeekNumber = (d: Date) => {
+    const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const dayNum = date.getUTCDay() || 7;
+    date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+    return Math.ceil((((date as any) - (yearStart as any)) / 86400000 + 1) / 7);
+  };
+
+  const revenuSemaine = paiements.reduce((total, p) => {
+    const date = new Date(p.date);
+    const now = new Date();
+    return getWeekNumber(date) === getWeekNumber(now) && date.getFullYear() === now.getFullYear()
+      ? total + parseFloat(p.prix.replace("$", ""))
+      : total;
+  }, 0);
+
   return (
     <div className="flex min-h-screen bg-gray-100">
       <SidebarAdmin />
@@ -37,18 +61,15 @@ export default function ComptabilitePage() {
         <div className="grid grid-cols-3 gap-6">
           <div className="bg-white p-6 rounded shadow text-center">
             <p className="text-sm text-gray-500">Revenu du mois</p>
-            <p className="text-3xl font-bold text-green-600">$30,400</p>
-            <p className="text-xs text-gray-400 mt-1">+12% vs mois dernier</p>
+            <p className="text-3xl font-bold text-green-600">${revenuMois.toFixed(2)}</p>
           </div>
           <div className="bg-white p-6 rounded shadow text-center">
             <p className="text-sm text-gray-500">Revenu de la semaine</p>
-            <p className="text-3xl font-bold text-blue-600">$42,000</p>
-            <p className="text-xs text-gray-400 mt-1">+16% augmentation</p>
+            <p className="text-3xl font-bold text-blue-600">${revenuSemaine.toFixed(2)}</p>
           </div>
           <div className="bg-white p-6 rounded shadow text-center">
             <p className="text-sm text-gray-500">Nombre</p>
-            <p className="text-3xl font-bold text-yellow-500">103</p>
-            <p className="text-xs text-gray-400 mt-1">+24% vs last month</p>
+            <p className="text-3xl font-bold text-yellow-500">{paiements.length}</p>
           </div>
         </div>
 

@@ -1,18 +1,33 @@
+# models/tournoi.py
+
 from models import db
-from sqlalchemy import Column, Integer, String, ForeignKey, Enum
-from sqlalchemy.orm import relationship
 
 class Tournoi(db.Model):
     __tablename__ = 'tournoi'
 
-    idTournoi = Column(Integer, primary_key=True)
-    nomTournoi = Column(String)
-    descriptionTournoi = Column(String)
-    dateTournoi = Column(String)
-    heureDebut = Column(String)
-    heureFin = Column(String)
+    idTournoi = db.Column(db.Integer, primary_key=True)
+    nomTournoi = db.Column(db.String)
+    descriptionTournoi = db.Column(db.String)
+    dateTournoi = db.Column(db.String)  # format ISO YYYY-MM-DD
+    heureDebut = db.Column(db.String)
+    heureFin = db.Column(db.String)
+    sport_id = db.Column(db.Integer, db.ForeignKey('sport.idSport'), nullable=False)
+    sport = db.relationship('Sport', backref='tournois')
+    tableau = db.Column(db.Enum('simple', 'double', 'mixte', 'autre', name='tableau_type'), nullable=False)
 
-    sport_id = Column(Integer, ForeignKey('sport.idSport'), nullable=False)
-    sport = relationship('Sport', backref='tournois')
-
-    tableau = db.Column(Enum('simple', 'double', 'mixte', 'autre', name='tableau_type'), nullable=False)
+    def to_dict(self):
+        return {
+            "id": self.idTournoi,
+            "titre": self.nomTournoi,
+            "description": self.descriptionTournoi,
+            "date": self.dateTournoi,
+            "heure": self.heureDebut,
+            "heureFin": self.heureFin,
+            "sport": self.sport.nomSport if self.sport else "Inconnu",
+            "tableau": self.tableau,
+            "nb_joueurs_max": 10,
+            "nb_joueurs_inscrits": 2,
+            "organisateur": "Ewen Buhot",
+            "niveau_requis": "Aucun",
+            "date_limite": "2025-07-19T18:00:00"
+        }
