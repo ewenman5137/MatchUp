@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from models.utilisateur import db
+from models.utilisateur import Utilisateur, db
 from models.reservation import Reservation
 # (et les autres à venir : terrain, tournoi, etc.)
 
@@ -110,3 +110,51 @@ def get_disponibilites():
         })
 
     return jsonify(disponibilites), 200
+
+@reservation_bp.route("/api/utilisateur/<int:idUser>/prochains-matchs", methods=["GET"])
+def get_prochains_matchs_user(idUser):
+    try:
+        user = Utilisateur.query.get(idUser)
+        if not user:
+            return jsonify({"error": "Utilisateur non trouvé"}), 404
+
+        email_user = user.email
+        now = datetime.now()
+
+        reservations = Reservation.query.filter(
+            Reservation.dateReservation >= now.strftime("%Y-%m-%d"),
+            Reservation.statutReservation == "confirmee"
+        ).all()
+
+        prochains = []
+        for r in reservations:
+            if email_user in (r.joueurs or []):
+                date_str = r.dateReservation
+                heure_str = r.heureDebut
+
+                # Concatène et convertit la date + heure
+                try:
+                    datetime_match = datetime.strptime(f"{date_str} {heure_str}", "%Y-%m-%d %H:%M")
+                    if datetime_match >= now:
+                        prochains.append({
+                            "id": r.idReservation,
+                            "date": date_str,
+                            "heure": heure_str,
+                            "sport": r.sport,
+                            "lieu": "UQAC",
+                            "mode": r.modeJeu,
+                            "prix": r.prix,
+                            "joueurs": r.joueurs
+                        })
+                except Exception as e:
+                    print("Erreur conversion date/heure :", e)
+
+        # Trie par date
+        prochains.sort(key=lambda x: f"{x['date']} {x['heure']}")
+
+        return jsonify(prochains), 200
+
+    except Exception as e:
+        print("Erreur récupération prochains matchs:", e)
+        return jsonify({"error": "Erreur serveur"}), 500
+

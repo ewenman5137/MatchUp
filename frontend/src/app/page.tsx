@@ -133,7 +133,7 @@ export default function Accueil() {
           <img src="accueil/tennis.png" alt="" />
         </div>
         <div className="sport">
-          <img src="accueil/pickelball.png" alt="" />
+          <img src="accueil/pickleball.png" alt="" />
           <a>Pickleball</a>
         </div>
         <div className="sport">

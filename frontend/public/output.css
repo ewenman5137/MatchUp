@@ -124,7 +124,6 @@
   /* 2 */
   border-style: solid;
   /* 2 */
-  border-color: #e5e7eb;
   /* 2 */
 }
 
@@ -562,7 +561,6 @@ video {
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
-    --foreground: #ededed;
   }
 }
 
