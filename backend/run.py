@@ -12,6 +12,7 @@ from models import db
 from models.utilisateur import Utilisateur  # 👈 importe bien ici ton modèle
 from routes.participant_bp import participants_bp
 from routes.rencontre import rencontre_bp
+from routes.route_terrain import blocage_bp
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///matchup.db'
@@ -30,6 +31,7 @@ app.register_blueprint(paiement_bp)
 app.register_blueprint(tournoi_bp)
 app.register_blueprint(participants_bp)
 app.register_blueprint(rencontre_bp)
+app.register_blueprint(blocage_bp)
 
 if __name__ == '__main__':
     with app.app_context():
