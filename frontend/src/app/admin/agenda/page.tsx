@@ -8,13 +8,13 @@ import { fr } from "date-fns/locale";
 const sports = ["Badminton", "Pickleball", "Tennis"];
 
 const horaires = [
-  "8h30 - 9h30",
-  "9h30 - 10h30",
-  "10h30 - 11h30",
-  "11h30 - 12h30",
-  "12h30 - 13h30",
-  "13h30 - 14h30",
-  "14h30 - 15h30",
+  "8h00 - 9h00",
+  "9h00 - 10h00",
+  "10h00 - 11h00",
+  "11h00 - 12h00",
+  "12h00 - 13h00",
+  "13h00 - 14h00",
+  "14h00 - 15h00",
 ];
 
 export default function AgendaAdmin() {
@@ -22,12 +22,87 @@ export default function AgendaAdmin() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
   const [showPopup, setShowPopup] = useState(false);
+  const [joueur1, setJoueur1] = useState("");
+  const [joueur2, setJoueur2] = useState("");
 
   const handleSlotClick = (slot: string) => {
     if (selectedSlots.includes(slot)) {
       setSelectedSlots(selectedSlots.filter((s) => s !== slot));
     } else {
       setSelectedSlots([...selectedSlots, slot]);
+    }
+  };
+
+  const convertToTime = (str: string) => {
+    const [h, m] = str.replace("h", ":").split(":");
+    return `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
+  };
+
+  const fetchUserId = async (email: string) => {
+    const res = await fetch(`http://localhost:5000/api/utilisateur/id-par-email?email=${email}`);
+    if (!res.ok) throw new Error("Impossible de récupérer l'utilisateur");
+    const data = await res.json();
+    console.log(data.id)
+    return data.id;
+  };
+
+  const handleConfirm = async () => {
+    const dateISO = selectedDate.toISOString().split("T")[0];
+    const email1 = joueur1.trim();
+    const email2 = joueur2.trim();
+
+    if (!email1 || !email2) {
+      alert("Veuillez entrer les deux adresses email des joueurs.");
+      return;
+    }
+
+    try {
+      const id1 = await fetchUserId(email1);
+      const id2 = await fetchUserId(email2);
+
+      for (const slot of selectedSlots) {
+        const [heureDebutBrut] = slot.split(" - ");
+        const heureDebut = convertToTime(heureDebutBrut);
+
+        // Étape 1 : créer une rencontre avec joueur 1
+        const creationRes = await fetch("http://localhost:5000/rencontres", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: email1,
+            sport: selectedSport,
+            niveau: "Aucun",
+            date: dateISO,
+            heure: heureDebut,
+            duree: 1,
+            commentaire: "Ajout via interface admin",
+          }),
+        });
+
+        const creationData = await creationRes.json();
+        if (!creationRes.ok) throw new Error(creationData.error || "Erreur création rencontre");
+
+        const rencontreId = creationData.id;
+
+        // Étape 2 : accepter la rencontre avec joueur 2
+        const acceptRes = await fetch(`http://localhost:5000/rencontres/${id2}/accepter`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: email2 }),
+        });
+
+        const acceptData = await acceptRes.json();
+        if (!acceptRes.ok) throw new Error(acceptData.error || "Erreur acceptation rencontre");
+      }
+
+      alert("Rencontres et réservations créées avec succès !");
+      setSelectedSlots([]);
+      setJoueur1("");
+      setJoueur2("");
+      setShowPopup(false);
+    } catch (error) {
+      console.error("❌ Erreur :", error);
+      alert("Erreur lors de la création des rencontres.");
     }
   };
 
@@ -38,7 +113,6 @@ export default function AgendaAdmin() {
       <main className="flex-1 p-8 bg-gray-50">
         <h1 className="text-xl font-semibold mb-4">Agenda - {selectedSport}</h1>
 
-        {/* Sélection du sport */}
         <div className="mb-4 space-x-2">
           {sports.map((sport) => (
             <button
@@ -53,15 +127,10 @@ export default function AgendaAdmin() {
           ))}
         </div>
 
-        {/* Date sélectionnée */}
         <div className="mb-4 text-gray-700">
-          Date sélectionnée :{" "}
-          <strong>
-            {format(selectedDate, "EEEE d MMMM yyyy", { locale: fr })}
-          </strong>
+          Date sélectionnée : <strong>{format(selectedDate, "EEEE d MMMM yyyy", { locale: fr })}</strong>
         </div>
 
-        {/* Créneaux horaires */}
         <div className="bg-white rounded shadow p-4 mb-6 max-w-lg">
           <h2 className="text-lg font-medium mb-3">Créneaux disponibles</h2>
           <div className="space-y-2">
@@ -81,7 +150,6 @@ export default function AgendaAdmin() {
           </div>
         </div>
 
-        {/* Bouton réserver */}
         <button
           disabled={selectedSlots.length === 0}
           onClick={() => setShowPopup(true)}
@@ -95,7 +163,6 @@ export default function AgendaAdmin() {
         </button>
       </main>
 
-      {/* Popup de confirmation */}
       {showPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-center z-50">
           <div className="bg-white rounded-lg p-6 w-[400px] shadow-lg relative">
@@ -108,9 +175,28 @@ export default function AgendaAdmin() {
             <h2 className="text-lg font-bold mb-4">
               Réservation - {format(selectedDate, "d MMMM yyyy", { locale: fr })}
             </h2>
-            <p className="text-sm text-gray-700 mb-3">
-              Sport : <strong>{selectedSport}</strong>
-            </p>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Email joueur 1 :
+              </label>
+              <input
+                type="email"
+                value={joueur1}
+                onChange={(e) => setJoueur1(e.target.value)}
+                className="w-full px-3 py-2 border rounded"
+              />
+              <label className="block text-sm font-medium text-gray-700 mt-3 mb-1">
+                Email joueur 2 :
+              </label>
+              <input
+                type="email"
+                value={joueur2}
+                onChange={(e) => setJoueur2(e.target.value)}
+                className="w-full px-3 py-2 border rounded"
+              />
+            </div>
+
             <p className="text-sm text-gray-700 mb-2">Créneaux sélectionnés :</p>
             <ul className="list-disc pl-5 text-sm text-gray-600 mb-4">
               {selectedSlots.map((slot, index) => (
@@ -119,10 +205,7 @@ export default function AgendaAdmin() {
             </ul>
 
             <button
-              onClick={() => {
-                setShowPopup(false);
-                alert("Réservation confirmée !");
-              }}
+              onClick={handleConfirm}
               className="w-full bg-[#7A874C] text-white px-4 py-2 rounded"
             >
               Confirmer la réservation

@@ -87,8 +87,8 @@ def get_disponibilites():
     date = request.args.get("date")  # format : YYYY-MM-DD
 
     horaires = [
-        "8h30 - 9h30", "9h30 - 10h30", "10h30 - 11h30", "11h30 - 12h30",
-        "12h30 - 13h30", "13h30 - 14h30", "14h30 - 15h30"
+        "8h00 - 9h00", "9h00 - 10h00", "10h00 - 11h00", "11h00 - 12h00",
+        "12h00 - 13h00", "13h00 - 14h00", "14h00 - 15h00"
     ]
 
     MAX_RESERVATIONS = 2  # Exemple : 2 terrains disponibles

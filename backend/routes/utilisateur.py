@@ -168,3 +168,19 @@ def get_utilisateurs():
         }
         for u in utilisateurs
     ])
+
+@utilisateur_bp.route("/api/utilisateur/id-par-email", methods=["GET"])
+def get_user_id_by_email():
+    email = request.args.get("email")
+    if not email:
+        return jsonify({"error": "Email requis"}), 400
+
+    utilisateur = Utilisateur.query.filter_by(email=email).first()
+    if not utilisateur:
+        return jsonify({"error": "Utilisateur non trouvé"}), 404
+
+    return jsonify({
+        "id": utilisateur.idUser,
+        "prenom": utilisateur.prenom,
+        "nom": utilisateur.nom
+    }), 200
