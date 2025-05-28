@@ -45,3 +45,24 @@ def login():
             "role": user.roleParticipant
         }
     }), 200
+
+@auth.route("/utilisateurs", methods=["GET"])
+def get_all_users():
+    users = Utilisateur.query.all()
+    result = []
+
+    for user in users:
+        result.append({
+            "id": user.idUser,
+            "prenom": user.prenom,
+            "nom": user.nom,
+            "email": user.email,
+            "role": user.roleParticipant,
+            "sexe": user.sexe,
+            "langue": user.langue,
+            "nationalite": user.nationalite,
+            "points": user.points,
+            "classement": user.classement
+        })
+
+    return jsonify(result), 200

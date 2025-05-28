@@ -1,5 +1,3 @@
-# models/tournoi.py
-
 from models import db
 
 class Tournoi(db.Model):
@@ -15,6 +13,9 @@ class Tournoi(db.Model):
     sport = db.relationship('Sport', backref='tournois')
     tableau = db.Column(db.Enum('simple', 'double', 'mixte', 'autre', name='tableau_type'), nullable=False)
 
+    # ✅ Ajouter l’email de l’organisateur
+    emailOrganisateur = db.Column(db.String)
+
     def to_dict(self):
         return {
             "id": self.idTournoi,
@@ -27,7 +28,7 @@ class Tournoi(db.Model):
             "tableau": self.tableau,
             "nb_joueurs_max": 10,
             "nb_joueurs_inscrits": 2,
-            "organisateur": "Ewen Buhot",
+            "organisateur": self.emailOrganisateur,  # ✅ modifié ici aussi
             "niveau_requis": "Aucun",
             "date_limite": "2025-07-19T18:00:00"
         }

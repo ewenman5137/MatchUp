@@ -31,9 +31,10 @@ export default function SidebarAdmin() {
     <aside className="w-64 min-h-screen bg-white border-r relative flex flex-col justify-between px-4 py-6 shadow-md">
       <div>
         {/* Bouton retour */}
-        <button onClick={() => router.back()} className="mb-6">
+        <button onClick={() => router.push("/")} className="mb-6">
           <ArrowLeft className="text-gray-500 hover:text-gray-800" />
         </button>
+
 
         {/* Logo */}
         <Link href="/" className="block mb-10 text-center">

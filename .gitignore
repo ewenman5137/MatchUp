@@ -1,0 +1,5 @@
+/backend/mon_env
+/.venv
+/backend/routes/admin/__pycache__
+frontend/pnpm-lock.yaml
+frontend/pnpm-lock.yaml

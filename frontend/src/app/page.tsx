@@ -16,15 +16,9 @@ const modes = [
   },
   {
     id: "rechercher_adversaire",
-    title: "Rechercher un adversaire",
+    title: "Créer ou trouver un match",
     icon: "🔍",
     description: "Laisse une description pour trouver un adversaire.",
-  },
-  {
-    id: "trouver_adversaire",
-    title: "Trouver un adversaire",
-    icon: "🔍",
-    description: "Laisse-nous te trouver un match équitable.",
   },
   {
     id: "inscription_tournoi",
@@ -129,22 +123,23 @@ export default function Accueil() {
 
       <div id="containeurSportEquipe">
         <div className="sport">
-          <a>Tennis</a>
-          <img src="accueil/tennis.png" alt="" />
+          <a href="https://www.uqac.ca/inuk/hockey-masculin/" target="_blank" rel="noopener noreferrer">Hockey</a>
+          <img src="accueil/hockey.jpg" alt="Hockey" />
         </div>
         <div className="sport">
-          <img src="accueil/pickleball.png" alt="" />
-          <a>Pickleball</a>
+          <img src="accueil/volleyball.jpg" alt="Volleyball" />
+          <a href="https://www.uqac.ca/inuk/volleyball-feminin/" target="_blank" rel="noopener noreferrer">Volleyball</a>
         </div>
         <div className="sport">
-          <a>Badminton</a>
-          <img src="accueil/badminton.png" alt="" />
+          <a href="https://www.uqac.ca/inuk/cross-country/" target="_blank" rel="noopener noreferrer">Cross-country</a>
+          <img src="accueil/cross-country.jpg" alt="Cross-country" />
         </div>
         <div className="sport">
-          <img src="accueil/soccer.png" alt="" />
-          <a>Soccer</a>
+          <img src="accueil/athletisme.jpg" alt="Athlétisme" />
+          <a href="https://www.uqac.ca/inuk/athletisme/" target="_blank" rel="noopener noreferrer">Athlétisme</a>
         </div>
       </div>
+
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">

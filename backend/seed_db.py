@@ -72,6 +72,7 @@ with app.app_context():
     # 🏓 Sports
     tennis = Sport(nomSport="Tennis", descriptionSport="Sport de raquette")
     badminton = Sport(nomSport="Badminton", descriptionSport="Sport en salle avec volant")
+    pickleball = Sport(nomSport="Pickleball", descriptionSport="Sport entre le tennis de table et le tennis")
 
     # 🏟️ Terrain
     terrain1 = Terrain(nomTerrain="Tennis #1", capaciteMax=2)
@@ -135,7 +136,7 @@ with app.app_context():
 
     db.session.add_all([
         alice, bob, charlie, admin,
-        tennis, badminton,
+        tennis, badminton, pickleball,
         terrain1,
         *tournois,
         reservation,

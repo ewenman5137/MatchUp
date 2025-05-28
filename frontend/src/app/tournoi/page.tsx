@@ -94,9 +94,6 @@ export default function ListeTournois() {
               {sport}
             </button>
           ))}
-          <button className="ml-auto bg-[#7A874C] text-white px-4 py-1 rounded">
-            Trouver un match
-          </button>
         </div>
 
         {tournoisFiltres.length > 0 ? (

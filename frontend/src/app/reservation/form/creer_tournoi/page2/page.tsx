@@ -33,21 +33,23 @@ export default function CreerTournoiPage2() {
     }
 
     const body = {
-      titre: `Tournoi de ${sport}`,
-      description,
-      type: "tournoi",
-      sport,
-      date,
-      heure,
-      lieu: "UQAC - 555, boulevard de l’Université, Chicoutimi",
-      nb_joueurs_min: minJoueurs,
-      nb_joueurs_max: maxJoueurs,
-      niveau_requis: niveau,
-      sexe,
-      organisateur: "Organisateur UQAC",
-      date_limite: `${date}T12:00`, // Ex: 12h le jour même
-      tableau: typeTournoi, // ✅ très important !
-    };
+    titre: `Tournoi de ${sport}`,
+    description,
+    type: "tournoi",
+    sport,
+    date,
+    heure,
+    lieu: "UQAC - 555, boulevard de l’Université, Chicoutimi",
+    nb_joueurs_min: minJoueurs,
+    nb_joueurs_max: maxJoueurs,
+    niveau_requis: niveau,
+    sexe,
+    email, // ✅ envoyé ici
+    organisateur: "Organisateur UQAC", // optionnel, à retirer ou garder pour l'affichage
+    date_limite: `${date}T12:00`,
+    tableau: typeTournoi
+  };
+
 
     const res = await fetch("http://localhost:5000/tournois", {
       method: "POST",
@@ -119,28 +121,40 @@ export default function CreerTournoiPage2() {
               />
 
               <label className="block mb-1">Niveau requis</label>
-              <input
-                type="text"
+              <select
                 value={niveau}
                 onChange={(e) => setNiveau(e.target.value)}
                 className="border p-2 rounded w-full mb-4"
-              />
+              >
+                <option value="Aucun">Aucun</option>
+                <option value="Débutant">Débutant</option>
+                <option value="Intermédiaire">Intermédiaire</option>
+                <option value="Professionnel">Professionnel</option>
+              </select>
 
-              <label className="block mb-1">Type de tournoi *</label>
-              <input
-                type="text"
+
+              <label className="block mb-1">Type de tournoi</label>
+              <select
                 value={typeTournoi}
                 onChange={(e) => setTypeTournoi(e.target.value)}
                 className="border p-2 rounded w-full mb-4"
-              />
+              >
+                <option value="simple">Simple</option>
+                <option value="double">Double</option>
+              </select>
+
 
               <label className="block mb-1">Sexe des participants</label>
-              <input
-                type="text"
+              <select
                 value={sexe}
                 onChange={(e) => setSexe(e.target.value)}
                 className="border p-2 rounded w-full mb-4"
-              />
+              >
+                <option value="Mixte">Mixte</option>
+                <option value="Masculin">Masculin</option>
+                <option value="Féminin">Féminin</option>
+              </select>
+
 
               <label className="block mb-1">Description du tournoi</label>
               <textarea

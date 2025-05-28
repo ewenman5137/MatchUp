@@ -63,7 +63,7 @@ export default function Sidebar() {
     <aside className="w-64 min-h-screen bg-white border-r relative flex flex-col justify-between px-4 py-6 shadow-md">
       <div>
         {/* Flèche de retour */}
-        <button className="mb-6">
+        <button onClick={() => router.push("/")} className="mb-6">
           <ArrowLeft className="text-gray-500 hover:text-gray-800" />
         </button>
 
@@ -79,7 +79,6 @@ export default function Sidebar() {
           <SidebarLink href="/profil/user" icon={<UserCircle size={18} />} label="Profil" isActive={isActive} />
           <SidebarLink href="/profil/classement" icon={<Trophy size={18} />} label="Classement" isActive={isActive} />
           <SidebarLink href="/profil/historique" icon={<History size={18} />} label="Historique" isActive={isActive} />
-          <SidebarLink href="/profil/agenda" icon={<Calendar size={18} />} label="Agenda" isActive={isActive} />
           <SidebarLink href="/profil/prochain-match" icon={<Calendar size={18} />} label="Prochain match" isActive={isActive} />
         </nav>
       </div>

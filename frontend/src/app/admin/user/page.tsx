@@ -4,10 +4,21 @@ import React, { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
 import SidebarAdmin from "../../Composants/SideBarAdmin/page";
 
-export default function UtilisateurPage() {
-  const [utilisateurs, setUtilisateurs] = useState([]);
+interface Utilisateur {
+  id: number;
+  prenom: string;
+  nom: string;
+  email: string;
+  role?: string;
+  points?: number;
+  classement?: number;
+}
 
-  // Récupération des utilisateurs depuis l’API Flask
+export default function UtilisateurPage() {
+  const [utilisateurs, setUtilisateurs] = useState<Utilisateur[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterRole, setFilterRole] = useState("Tous");
+
   useEffect(() => {
     fetch("http://localhost:5000/api/utilisateurs")
       .then((res) => res.json())
@@ -22,12 +33,21 @@ export default function UtilisateurPage() {
         method: "DELETE",
       });
       if (res.ok) {
-        setUtilisateurs(utilisateurs.filter((u: any) => u.id !== id));
+        setUtilisateurs(utilisateurs.filter((u) => u.id !== id));
       }
     } catch (err) {
       console.error("Erreur lors de la suppression :", err);
     }
   };
+
+  const utilisateursFiltres = utilisateurs
+    .filter((u) => (u.role || "").toLowerCase() !== "admin")
+    .filter((u) =>
+      `${u.prenom} ${u.nom} ${u.email}`.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .filter((u) => filterRole === "Tous" || u.role === filterRole);
+
+  const rolesDisponibles = ["Tous", ...new Set(utilisateurs.map((u) => u.role).filter((r) => r && r !== "admin"))];
 
   return (
     <div className="flex min-h-screen bg-gray-100">
@@ -38,10 +58,11 @@ export default function UtilisateurPage() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold">Tous les utilisateurs</h2>
             <div className="flex items-center gap-4">
-              <button className="px-3 py-1 border border-gray-300 rounded text-sm">+ Filtre</button>
               <input
                 type="text"
-                placeholder="🔍 Rechercher"
+                placeholder="🔍 Rechercher un utilisateur"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="px-3 py-1 border border-gray-300 rounded text-sm w-60"
               />
             </div>
@@ -60,7 +81,7 @@ export default function UtilisateurPage() {
                 </tr>
               </thead>
               <tbody>
-                {utilisateurs.map((u: any) => (
+                {utilisateursFiltres.map((u) => (
                   <tr key={u.id} className="border-t">
                     <td className="py-3 px-4 flex items-center gap-2">
                       <img src="/avatar-jean-eude.png" className="w-8 h-8 rounded-full" />
@@ -80,6 +101,13 @@ export default function UtilisateurPage() {
                     </td>
                   </tr>
                 ))}
+                {utilisateursFiltres.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="text-center py-4 text-gray-500">
+                      Aucun utilisateur trouvé.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
 

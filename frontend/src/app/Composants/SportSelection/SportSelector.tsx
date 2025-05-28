@@ -174,7 +174,7 @@ export default function SportSelector({ title, breadcrumb, restrictionNote }: Pr
       <div className="w-80 space-y-4 mt-16">
         <div className="rounded-lg shadow p-4 bg-white">
           <div className="flex space-x-4 items-center">
-            <img src={`/${selectedSport.toLowerCase()}_image.jpg`} alt={selectedSport} className="h-16 w-16 rounded-lg" />
+            <img src={`/accueil/${selectedSport.toLowerCase()}.png`} alt={selectedSport} className="h-16 w-16 rounded-lg" />
             <div>
               <h3 className="font-semibold">{selectedSport}</h3>
               <p className="text-sm text-gray-500">UQAC, Chicoutimi</p>

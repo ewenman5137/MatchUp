@@ -13,18 +13,15 @@ def creer_tournoi():
     print("📥 Données reçues pour tournoi:", data)
 
     try:
-        # 🏷️ 1. Récupération du sport
         sport_nom = data.get("sport")
         sport = Sport.query.filter_by(nomSport=sport_nom).first()
         if not sport:
             return jsonify({"error": "Sport introuvable"}), 400
 
-        # 🕒 Parsing des heures au format string
         heure_obj = datetime.strptime(data["heure"], "%H:%M")
         heure_debut = heure_obj.strftime("%H:%M")
         heure_fin = (heure_obj + timedelta(hours=1)).strftime("%H:%M")
 
-        # ✅ Insérer dans le modèle
         nouveau_tournoi = Tournoi(
             nomTournoi=data.get("titre"),
             descriptionTournoi=data.get("description", ""),
@@ -32,9 +29,9 @@ def creer_tournoi():
             heureDebut=heure_debut,
             heureFin=heure_fin,
             sport_id=sport.idSport,
-            tableau=data.get("tableau")
+            tableau=data.get("tableau"),
+            emailOrganisateur=data.get("email")  # ✅ ajouté ici
         )
-
 
         db.session.add(nouveau_tournoi)
         db.session.commit()
@@ -47,6 +44,7 @@ def creer_tournoi():
     except Exception as e:
         print("❌ Erreur lors de la création du tournoi:", e)
         return jsonify({"error": "Erreur interne"}), 500
+
 
 
 @tournoi_bp.route("/tournois", methods=["GET"])
@@ -105,3 +103,50 @@ def inscrire_utilisateur():
         print("❌ Erreur inscription:", e)
         return jsonify({"error": "Erreur lors de l'inscription"}), 500
 
+@tournoi_bp.route("/api/utilisateur/<email>/organise-tournoi", methods=["GET"])
+def est_organisateur(email):
+    try:
+        tournois = Tournoi.query.filter_by(emailOrganisateur=email).all()
+
+        if not tournois:
+            return jsonify({"organise": False, "tournois": []}), 200
+
+        resultats = []
+        for t in tournois:
+            resultats.append({
+                "id": t.idTournoi,
+                "titre": t.nomTournoi,
+                "description": t.descriptionTournoi,
+                "date": t.dateTournoi,
+                "heure": t.heureDebut,
+                "heureFin": t.heureFin,
+                "sport": t.sport.nomSport if t.sport else None,  # ✅ Vérifie si la relation est bien configurée
+                "tableau": t.tableau,
+                "organisateur": t.emailOrganisateur,
+                "participants": [p.email for p in t.participants] if hasattr(t, "participants") else []
+            })
+
+        return jsonify({"organise": True, "tournois": resultats}), 200
+
+    except Exception as e:
+        print("❌ Erreur vérification organisateur:", e)
+        import traceback
+        traceback.print_exc()  # ⬅️ Ajoute ceci pour voir la stacktrace complète
+        return jsonify({"error": "Erreur interne"}), 500
+
+
+    
+@tournoi_bp.route("/tournois/<int:id>", methods=["DELETE"])
+def supprimer_tournoi(id):
+    try:
+        tournoi = Tournoi.query.get(id)
+        if not tournoi:
+            return jsonify({"error": "Tournoi introuvable"}), 404
+
+        db.session.delete(tournoi)
+        db.session.commit()
+        return jsonify({"message": "Tournoi supprimé"}), 200
+
+    except Exception as e:
+        print("❌ Erreur suppression tournoi:", e)
+        return jsonify({"error": "Erreur interne"}), 500

@@ -149,7 +149,6 @@ export default function ClassementPage() {
                 <tr key={index} className="border-b border-gray-100">
                   <td className="py-2">{j.rang || index + 1}</td>
                   <td className="py-2 flex items-center gap-2">
-                    <img src="/avatar-placeholder.png" alt="avatar" className="w-5 h-5 rounded-full" />
                     {j.pseudo}
                   </td>
                   <td className="py-2 text-right">

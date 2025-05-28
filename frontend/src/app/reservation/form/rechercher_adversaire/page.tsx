@@ -168,16 +168,26 @@ export default function RechercherAdversairePage() {
                   className="border w-full px-3 py-2 rounded mt-1"
                 />
               </div>
-
               <div>
                 <label className="text-sm font-medium">Heure</label>
-                <input
-                  type="time"
+                <select
                   value={form.heure}
                   onChange={(e) => setForm({ ...form, heure: e.target.value })}
                   className="border w-full px-3 py-2 rounded mt-1"
-                />
+                >
+                  <option value="">-- Choisir une heure --</option>
+                  {Array.from({ length: 14 }, (_, i) => {
+                    const hour = i + 8; // de 08:00 à 21:00
+                    const formatted = hour.toString().padStart(2, "0") + ":00";
+                    return (
+                      <option key={hour} value={formatted}>
+                        {formatted}
+                      </option>
+                    );
+                  })}
+                </select>
               </div>
+
 
               <div>
                 <label className="text-sm font-medium">Niveau</label>
