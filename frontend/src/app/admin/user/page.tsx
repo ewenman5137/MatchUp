@@ -86,10 +86,6 @@ export default function UtilisateurPage() {
                 {filtres.map((u) => (
                   <tr key={u.id} className="border-t">
                     <td className="py-3 px-4 flex items-center gap-2">
-                      <img
-                        src="/avatar-jean-eude.png"
-                        className="w-8 h-8 rounded-full"
-                      />
                       {u.prenom} {u.nom}
                     </td>
                     <td className="py-3 px-4">{u.email}</td>
