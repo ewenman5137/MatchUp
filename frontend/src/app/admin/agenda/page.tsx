@@ -25,7 +25,9 @@ export default function AgendaAdmin() {
   const [joueur1, setJoueur1] = useState("");
   const [joueur2, setJoueur2] = useState("");
   const [blocageSlot, setBlocageSlot] = useState<string>("");
-  const [blocageDate, setBlocageDate] = useState<string>(new Date().toISOString().split("T")[0]);
+  const [blocageDate, setBlocageDate] = useState<string>(
+    new Date().toISOString().split("T")[0]
+  );
 
   const convertToTime = (str: string) => {
     const [h, m] = str.replace("h", ":").split(":");
@@ -34,37 +36,30 @@ export default function AgendaAdmin() {
 
   const handleSlotClick = (slot: string) => {
     if (slotsBloques.includes(slot)) return;
-    if (selectedSlots.includes(slot)) {
-      setSelectedSlots(selectedSlots.filter((s) => s !== slot));
-    } else {
-      setSelectedSlots([...selectedSlots, slot]);
-    }
+    setSelectedSlots((prev) =>
+      prev.includes(slot) ? prev.filter((s) => s !== slot) : [...prev, slot]
+    );
   };
 
   const fetchSlotsBloques = async () => {
     const date = selectedDate.toISOString().split("T")[0];
-    const promises = horaires.map(async (slot) => {
-      const [heureDebut] = slot.split(" - ");
-      const heure = convertToTime(heureDebut);
-      const res = await fetch(`http://localhost:5000/api/blocage?sport=${selectedSport}&date=${date}&heure=${heure}`);
-      const data = await res.json();
-      return data.bloque ? slot : null;
-    });
-
-    const result = await Promise.all(promises);
-    setSlotsBloques(result.filter((s): s is string => s !== null));
+    const results = await Promise.all(
+      horaires.map(async (slot) => {
+        const [heureDebut] = slot.split(" - ");
+        const heure = convertToTime(heureDebut);
+        const res = await fetch(
+          `http://localhost:5000/api/blocage?sport=${selectedSport}&date=${date}&heure=${heure}`
+        );
+        const data = await res.json();
+        return data.bloque ? slot : null;
+      })
+    );
+    setSlotsBloques(results.filter((s): s is string => s !== null));
   };
 
   useEffect(() => {
     fetchSlotsBloques();
   }, [selectedSport, selectedDate]);
-
-  const fetchUserId = async (email: string) => {
-    const res = await fetch(`http://localhost:5000/api/utilisateur/id-par-email?email=${email}`);
-    if (!res.ok) throw new Error("Impossible de récupérer l'utilisateur");
-    const data = await res.json();
-    return data.id;
-  };
 
   const handleConfirm = async () => {
     const dateISO = selectedDate.toISOString().split("T")[0];
@@ -77,18 +72,16 @@ export default function AgendaAdmin() {
     }
 
     try {
-      const id1 = await fetchUserId(email1);
-      const id2 = await fetchUserId(email2);
-
       for (const slot of selectedSlots) {
         const [heureDebutBrut] = slot.split(" - ");
         const heureDebut = convertToTime(heureDebutBrut);
 
+        // 1) Création de la rencontre pour joueur1
         const creationRes = await fetch("http://localhost:5000/rencontres", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            email: email1,
+            emailInitiateur: email1,
             sport: selectedSport,
             niveau: "Aucun",
             date: dateISO,
@@ -97,20 +90,24 @@ export default function AgendaAdmin() {
             commentaire: "Ajout via interface admin",
           }),
         });
-
         const creationData = await creationRes.json();
-        if (!creationRes.ok) throw new Error(creationData.error || "Erreur création rencontre");
+        if (!creationRes.ok)
+          throw new Error(creationData.error || "Erreur création rencontre");
 
         const rencontreId = creationData.id;
 
-        const acceptRes = await fetch(`http://localhost:5000/rencontres/${id2}/accepter`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: email2 }),
-        });
-
+        // 2) Acceptation de la rencontre pour joueur2
+        const acceptRes = await fetch(
+          `http://localhost:5000/rencontres/${rencontreId}/accepter`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ emailInvite: email2 }),
+          }
+        );
         const acceptData = await acceptRes.json();
-        if (!acceptRes.ok) throw new Error(acceptData.error || "Erreur acceptation rencontre");
+        if (!acceptRes.ok)
+          throw new Error(acceptData.error || "Erreur acceptation rencontre");
       }
 
       alert("Rencontres et réservations créées avec succès !");
@@ -136,8 +133,8 @@ export default function AgendaAdmin() {
         body: JSON.stringify({
           sport: selectedSport,
           date: blocageDate,
-          heure
-        })
+          heure,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erreur blocage créneau");
@@ -152,11 +149,13 @@ export default function AgendaAdmin() {
 
   return (
     <div className="flex min-h-screen">
-          <SidebarAdmin />
+      <SidebarAdmin />
       <main className="flex-1 p-8 bg-gray-50 grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Colonne gauche */}
         <section>
-          <h1 className="text-xl font-semibold mb-4">Agenda - {selectedSport}</h1>
+          <h1 className="text-xl font-semibold mb-4">
+            Agenda - {selectedSport}
+          </h1>
 
           <div className="mb-4 space-x-2">
             {sports.map((sport) => (
@@ -164,7 +163,9 @@ export default function AgendaAdmin() {
                 key={sport}
                 onClick={() => setSelectedSport(sport)}
                 className={`px-4 py-1 rounded-full border ${
-                  selectedSport === sport ? "bg-[#7A874C] text-white" : "bg-white text-gray-700"
+                  selectedSport === sport
+                    ? "bg-[#7A874C] text-white"
+                    : "bg-white text-gray-700"
                 }`}
               >
                 {sport}
@@ -173,7 +174,10 @@ export default function AgendaAdmin() {
           </div>
 
           <div className="mb-4 text-gray-700">
-            Date sélectionnée : <strong>{format(selectedDate, "EEEE d MMMM yyyy", { locale: fr })}</strong>
+            Date sélectionnée :{" "}
+            <strong>
+              {format(selectedDate, "EEEE d MMMM yyyy", { locale: fr })}
+            </strong>
           </div>
 
           <div className="bg-white rounded shadow p-4 mb-6">
@@ -187,10 +191,13 @@ export default function AgendaAdmin() {
                     key={slot}
                     onClick={() => handleSlotClick(slot)}
                     disabled={isBloque}
-                    className={`w-full text-left px-4 py-2 rounded border transition
-                      ${isBloque ? "bg-red-500 text-white cursor-not-allowed" :
-                        isSelected ? "bg-[#7A874C] text-white" :
-                        "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
+                    className={`w-full text-left px-4 py-2 rounded border transition ${
+                      isBloque
+                        ? "bg-red-500 text-white cursor-not-allowed"
+                        : isSelected
+                        ? "bg-[#7A874C] text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
                   >
                     {slot} — {isBloque ? "bloqué" : "Terrain libre"}
                   </button>
@@ -231,7 +238,9 @@ export default function AgendaAdmin() {
             >
               <option value="">-- Choisir un créneau --</option>
               {horaires.map((slot) => (
-                <option key={slot} value={slot}>{slot}</option>
+                <option key={slot} value={slot}>
+                  {slot}
+                </option>
               ))}
             </select>
             <button
@@ -256,7 +265,8 @@ export default function AgendaAdmin() {
               &times;
             </button>
             <h2 className="text-lg font-bold mb-4">
-              Réservation - {format(selectedDate, "d MMMM yyyy", { locale: fr })}
+              Réservation -{" "}
+              {format(selectedDate, "d MMMM yyyy", { locale: fr })}
             </h2>
 
             <div className="mb-4">

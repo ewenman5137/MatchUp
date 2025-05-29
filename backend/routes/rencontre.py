@@ -8,42 +8,82 @@ from datetime import datetime, timedelta
 
 rencontre_bp = Blueprint("rencontres", __name__)
 
+def get_or_create_guest(email: str) -> Utilisateur:
+    """Renvoie un Utilisateur correspondant à email.
+    Si introuvable, crée un compte guest avec email_pseudo."""
+    user = Utilisateur.query.filter_by(email=email).first()
+    if user:
+        return user
+
+    guest_email = f"{email}_pseudo"
+    user = Utilisateur(
+        prenom="Invité",
+        nom="",
+        email=guest_email,
+        mdp="",               # mot de passe vide
+        roleParticipant="guest"
+    )
+    db.session.add(user)
+    db.session.flush()       # pour générer user.idUser
+    return user
+
 @rencontre_bp.route("/rencontres", methods=["POST"])
 def proposer_rencontre():
-    data = request.get_json()
+    data = request.get_json() or {}
+
+    email1   = data.get("email") or data.get("emailInitiateur")
+    sport    = data.get("sport")
+    date_str = data.get("date")
+    heure    = data.get("heure")
+    if not (email1 and sport and date_str and heure):
+        return jsonify({"error": "email, sport, date et heure sont requis"}), 400
+
+    # on stockera l'email brut pour la réservation
+    original_email1 = email1
+
+    # on récupère ou crée l'utilisateur (avec suffixe _pseudo si besoin)
+    user1 = get_or_create_guest(email1)
+
     try:
-        # 🔍 Récupération de l'utilisateur à partir de son email
-        email = data.get("email")
-        utilisateur = Utilisateur.query.filter_by(email=email).first()
-
-        if not utilisateur:
-            return jsonify({"error": "Utilisateur introuvable"}), 404
-
-        # ✅ Création de la rencontre
+        # 1) création de la rencontre
         nouvelle = RencontreProposee(
-            idJoueur1=utilisateur.idUser,
-            sport=data["sport"],
-            niveau=data.get("niveau"),
-            date=datetime.strptime(data["date"], "%Y-%m-%d"),
-            heure=data["heure"],
-            duree=data.get("duree", 1),
-            terrain=data.get("terrain"),
-            commentaire=data.get("commentaire"),
-            statut="en_attente"
+            idJoueur1   = user1.idUser,
+            sport       = sport,
+            niveau      = data.get("niveau"),
+            date        = datetime.strptime(date_str, "%Y-%m-%d"),
+            heure       = heure,
+            duree       = data.get("duree", 1),
+            terrain     = data.get("terrain"),
+            commentaire = data.get("commentaire"),
+            statut      = "en_attente"
         )
-
         db.session.add(nouvelle)
-        db.session.commit()
+        db.session.flush()  # pour nouvelle.id
 
-        return jsonify({"message": "Rencontre proposée avec succès."}), 201
+        # 2) création de la réservation **immédiate**
+        end = (datetime.strptime(heure, "%H:%M") + timedelta(hours=nouvelle.duree)).strftime("%H:%M")
+        reservation = Reservation(
+            dateReservation   = date_str,
+            heureDebut        = heure,
+            heureFin          = end,
+            statutReservation = "confirmee",
+            modeJeu           = "match_paire",
+            sport             = sport,
+            prix              = data.get("prix", "Gratuit"),
+            # on passe ici l'email brut, pas le _pseudo
+            joueurs           = [original_email1]
+        )
+        db.session.add(reservation)
+
+        db.session.commit()
+        return jsonify({"message": "Rencontre et réservation créées.", "id": nouvelle.id}), 201
 
     except Exception as e:
-        print("Erreur création rencontre:", e)
+        db.session.rollback()
+        print("Erreur création rencontre+reservation:", e)
         return jsonify({"error": "Erreur serveur"}), 500
 
 
-
-# Obtenir toutes les propositions disponibles
 @rencontre_bp.route("/rencontres", methods=["GET"])
 def get_rencontres():
     try:
@@ -56,43 +96,50 @@ def get_rencontres():
 
 @rencontre_bp.route("/rencontres/<int:id>/accepter", methods=["PATCH"])
 def accepter_rencontre(id):
-    data = request.get_json()
+    data   = request.get_json() or {}
+    email2 = data.get("email") or data.get("emailInvite")
+    if not email2:
+        return jsonify({"error": "emailInvite (ou email) est requis"}), 400
+
+    rencontre = RencontreProposee.query.get(id)
+    if not rencontre or rencontre.statut != "en_attente":
+        return jsonify({"error": "Rencontre non disponible"}), 400
+
+    original_email2 = email2
+    user2 = get_or_create_guest(email2)
+
     try:
-        rencontre = RencontreProposee.query.get(id)
-        if not rencontre or rencontre.statut != "en_attente":
-            return jsonify({"error": "Rencontre non disponible"}), 400
+        # mise à jour de la rencontre
+        rencontre.idJoueur2 = user2.idUser
+        rencontre.statut    = "acceptee"
 
-        # ✅ Récupérer utilisateur via email
-        email = data.get("email")
-        utilisateur = Utilisateur.query.filter_by(email=email).first()
-        if not utilisateur:
-            return jsonify({"error": "Utilisateur introuvable"}), 404
+        # création de la réservation
+        start = datetime.strptime(rencontre.heure, "%H:%M")
+        end   = (start + timedelta(hours=rencontre.duree)).strftime("%H:%M")
+        joueurs_emails = []
 
-        rencontre.idJoueur2 = utilisateur.idUser
-        rencontre.statut = "accepte"
+        # retrouver email1 brut via la réservation existante ou comment faire ?
+        # ici on le stocke temporairement dans commentaire si nécessaire
+        # mais supposons que l'on remette la même logique :
+        joueurs_emails.append(rencontre.commentaire or f"{rencontre.joueur1.email}".rstrip("_pseudo"))
+        joueurs_emails.append(original_email2)
 
-        # Création de la réservation
-        heure_fin = (datetime.strptime(rencontre.heure, "%H:%M") + timedelta(hours=rencontre.duree)).strftime("%H:%M")
         reservation = Reservation(
-            heureDebut=rencontre.heure,
-            heureFin=heure_fin,
-            dateReservation=rencontre.date.strftime("%Y-%m-%d"),
-            statutReservation="confirmee",
-            modeJeu="rechercher_adversaire",
-            sport=rencontre.sport,
-            prix="Gratuit",
-            joueurs=[rencontre.joueur1.email, utilisateur.email]
+            dateReservation   = rencontre.date.strftime("%Y-%m-%d"),
+            heureDebut        = rencontre.heure,
+            heureFin          = end,
+            statutReservation = "confirmee",
+            modeJeu           = "match_paire",
+            sport             = rencontre.sport,
+            prix              = "Gratuit",
+            joueurs           = joueurs_emails
         )
         db.session.add(reservation)
-
-        # Match lié
-        match = Game(scoreEquipe1=0, scoreEquipe2=0, statutGame="a_jouer", sets="")
-        db.session.add(match)
-
         db.session.commit()
 
-        return jsonify({"message": "Rencontre acceptée, match créé."}), 200
+        return jsonify({"message": "Rencontre acceptée et réservation créée."}), 200
 
     except Exception as e:
+        db.session.rollback()
         print("Erreur acceptation rencontre:", e)
         return jsonify({"error": "Erreur serveur"}), 500
