@@ -76,6 +76,42 @@ export default function ProchainsMatchsPage() {
       .catch((err) => console.error("Erreur :", err));
   }, []);
 
+  const handleModifierScore = async (matchId: number) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/game/${matchId}`);
+      if (!res.ok) {
+        alert("Impossible de récupérer les infos du match");
+        return;
+      }
+      const game = await res.json();
+
+      const score1 = prompt("Score Équipe 1 :", game.scoreEquipe1);
+      const score2 = prompt("Score Équipe 2 :", game.scoreEquipe2);
+      const sets = prompt("Sets (ex: 11-9;8-11;11-6) :", game.sets || "");
+
+      const updateRes = await fetch(`http://localhost:5000/api/game/${matchId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          scoreEquipe1: parseInt(score1),
+          scoreEquipe2: parseInt(score2),
+          sets: sets,
+          statutGame: "Terminé"
+        })
+      });
+
+      if (updateRes.ok) {
+        alert("Score mis à jour !");
+        window.location.reload();
+      } else {
+        alert("Erreur lors de la mise à jour.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Une erreur est survenue.");
+    }
+  };
+
   const matchsFiltres = matches.filter((m) =>
     filtreSport === "Tous" ? true : m.sport.toLowerCase() === filtreSport.toLowerCase()
   );
@@ -87,7 +123,6 @@ export default function ProchainsMatchsPage() {
       <div className="flex-1 px-6 py-10 mt-10">
         <h1 className="text-2xl font-semibold mb-6">📅 Prochains matchs</h1>
 
-        {/* Filtres sport */}
         <div className="flex gap-3 mb-6">
           {["Tous", "Tennis", "Badminton", "Pickleball"].map((sport) => (
             <button
@@ -102,7 +137,6 @@ export default function ProchainsMatchsPage() {
           ))}
         </div>
 
-        {/* Affichage des matchs */}
         {matchsFiltres.length === 0 ? (
           <p className="text-sm text-gray-500">Aucun match prévu pour ce sport.</p>
         ) : (
@@ -124,13 +158,18 @@ export default function ProchainsMatchsPage() {
                   <p className="text-sm text-gray-500">📍 {match.lieu}</p>
                   <p className="text-sm text-gray-500">💰 {match.prix}</p>
                   <p className="text-sm mt-1 font-medium">🎾 Participants : {match.participants}</p>
+                  <button
+                    onClick={() => handleModifierScore(match.id)}
+                    className="mt-2 text-sm text-blue-600 hover:underline"
+                  >
+                    Modifier le score
+                  </button>
                 </div>
               </div>
             ))}
           </div>
         )}
 
-        {/* 🎾 Tournois où je participe */}
         <h2 className="text-xl font-semibold mt-12 mb-4">🎾 Tournois auxquels je participe</h2>
         {tournoisParticipant.length === 0 ? (
           <p className="text-sm text-gray-500">Aucun tournoi prévu où vous êtes inscrit(e).</p>
@@ -153,7 +192,6 @@ export default function ProchainsMatchsPage() {
           </div>
         )}
 
-        {/* 🧑‍💼 Tournois que j’organise */}
         <h2 className="text-xl font-semibold mt-12 mb-4">🧑‍💼 Tournois que j’organise</h2>
         {tournoisOrganisateur.length === 0 ? (
           <p className="text-sm text-gray-500">Aucun tournoi que vous organisez pour le moment.</p>

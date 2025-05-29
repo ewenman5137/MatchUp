@@ -39,3 +39,4 @@ class RencontreProposee(db.Model):
             "statut": self.statut,
             "commentaire": self.commentaire
         }
+

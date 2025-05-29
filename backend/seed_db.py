@@ -6,8 +6,9 @@ from models.reservation import Reservation
 from models.terrain import Terrain
 from models.tournoi import Tournoi
 from models.game import Game
-import models
+from models.rencontre import RencontreProposee
 from werkzeug.security import generate_password_hash
+from datetime import date
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///matchup.db'
@@ -77,11 +78,54 @@ with app.app_context():
     # 🏟️ Terrain
     terrain1 = Terrain(nomTerrain="Tennis #1", capaciteMax=2)
 
-    # 🏆 Tournois pour chaque sport et chaque tableau
+    # 🎯 Rencontres proposées
+    rencontre1 = RencontreProposee(
+        idJoueur1=1,
+        idJoueur2=2,
+        sport="Tennis",
+        niveau="Débutant",
+        date=date(2025, 6, 1),
+        heure="15:00",
+        terrain="Tennis #1"
+    )
+
+    rencontre2 = RencontreProposee(
+        idJoueur1=1,
+        idJoueur2=3,
+        sport="Badminton",
+        niveau="Intermédiaire",
+        date=date(2025, 6, 2),
+        heure="16:00",
+        terrain="Badminton A"
+    )
+
+    db.session.add_all([
+        alice, bob, charlie, admin,
+        tennis, badminton, pickleball,
+        terrain1,
+        rencontre1, rencontre2
+    ])
+    db.session.commit()
+
+    # 🎾 Jeux liés aux rencontres
+    game1 = Game(scoreEquipe1=11, scoreEquipe2=9, statutGame="Terminé", sets="11-9;11-8", rencontre_id=rencontre1.id)
+    game2 = Game(scoreEquipe1=10, scoreEquipe2=12, statutGame="Terminé", sets="10-12;11-9;9-11", rencontre_id=rencontre1.id)
+    game3 = Game(scoreEquipe1=11, scoreEquipe2=8, statutGame="Terminé", sets="11-9;11-8", rencontre_id=rencontre1.id)
+    game4 = Game(scoreEquipe1=7, scoreEquipe2=11, statutGame="Terminé", sets="7-11;6-11", rencontre_id=rencontre2.id)
+    game5 = Game(scoreEquipe1=11, scoreEquipe2=6, statutGame="Terminé", sets="11-6;11-4", rencontre_id=rencontre2.id)
+
+    extra_games = [
+        Game(scoreEquipe1=2, scoreEquipe2=1, statutGame="Terminé", sets="11-3;8-11;11-7", rencontre_id=rencontre1.id),
+        Game(scoreEquipe1=1, scoreEquipe2=2, statutGame="Terminé", sets="10-12;11-9;9-11", rencontre_id=rencontre1.id),
+        Game(scoreEquipe1=2, scoreEquipe2=0, statutGame="Terminé", sets="11-7;11-4", rencontre_id=rencontre2.id),
+        Game(scoreEquipe1=0, scoreEquipe2=2, statutGame="Terminé", sets="9-11;8-11", rencontre_id=rencontre2.id),
+        Game(scoreEquipe1=2, scoreEquipe2=1, statutGame="Terminé", sets="11-6;9-11;11-8", rencontre_id=rencontre2.id)
+    ]
+
+    # 🏆 Tournois
     tournois = []
     tableaux = ["simple", "double", "mixte"]
     sports = [tennis, badminton]
-
     for i, sport in enumerate(sports):
         for j, tableau in enumerate(tableaux):
             tournois.append(Tournoi(
@@ -94,54 +138,37 @@ with app.app_context():
                 tableau=tableau
             ))
 
-    # 🎾 Jeux supplémentaires pour Alice dans différents sports/tableaux
-    extra_games = [
-        Game(scoreEquipe1=2, scoreEquipe2=1, statutGame="Terminé", sets="11-3;8-11;11-7"),
-        Game(scoreEquipe1=1, scoreEquipe2=2, statutGame="Terminé", sets="10-12;11-9;9-11"),
-        Game(scoreEquipe1=2, scoreEquipe2=0, statutGame="Terminé", sets="11-7;11-4"),
-        Game(scoreEquipe1=0, scoreEquipe2=2, statutGame="Terminé", sets="9-11;8-11"),
-        Game(scoreEquipe1=2, scoreEquipe2=1, statutGame="Terminé", sets="11-6;9-11;11-8")
-    ]
-
-    # 🎯 Matchs de base
-    game1 = Game(scoreEquipe1=11, scoreEquipe2=9, statutGame="Terminé", sets="11-9;11-8")
-    game2 = Game(scoreEquipe1=10, scoreEquipe2=12, statutGame="Terminé", sets="10-12;11-9;9-11")
-    game3 = Game(scoreEquipe1=11, scoreEquipe2=8, statutGame="Terminé", sets="11-9;11-8")
-    game4 = Game(scoreEquipe1=7, scoreEquipe2=11, statutGame="Terminé", sets="7-11;6-11")
-    game5 = Game(scoreEquipe1=11, scoreEquipe2=6, statutGame="Terminé", sets="11-6;11-4")
-
-    # 🧍 Association utilisateurs ↔ tournois (Alice dans tous les tournois)
+    # 👥 Liens tournois ↔ utilisateurs
     for tournoi in tournois:
         alice.tournois.append(tournoi)
 
     bob.tournois.append(tournois[0])
     charlie.tournois.append(tournois[0])
 
-    # 📊 Lier les entités
+    # 📊 Jeux ↔ utilisateurs
     alice.games = [game1, game3, game5] + extra_games
     bob.games = [game1, game2, game4]
     charlie.games = [game2]
 
-    # Associer des matchs à différents tournois
+    # Jeux ↔ tournois
     tournois[0].games = [game1, game2, game3]
     tournois[1].games = [game4, game5]
     tournois[2].games = extra_games[:2]
     tournois[3].games = extra_games[2:]
 
+    # Jeux ↔ terrain
     terrain1.games = [game1, game2] + extra_games
 
-    # 🕒 Réservation
+    # Réservation
     reservation = Reservation(dateReservation="2025-03-01", heureDebut="14:00", heureFin="15:00", statutReservation="Confirmée")
     reservation.games = [game1]
 
     db.session.add_all([
-        alice, bob, charlie, admin,
-        tennis, badminton, pickleball,
-        terrain1,
         *tournois,
         reservation,
         game1, game2, game3, game4, game5,
         *extra_games
     ])
     db.session.commit()
-    print("✅ Utilisateurs, tournois et matchs ajoutés avec succès !")
+
+    print("✅ Données de test insérées avec succès !")

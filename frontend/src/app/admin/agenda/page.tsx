@@ -103,7 +103,7 @@ export default function AgendaAdmin() {
 
         const rencontreId = creationData.id;
 
-        const acceptRes = await fetch(`http://localhost:5000/rencontres/${rencontreId}/accepter`, {
+        const acceptRes = await fetch(`http://localhost:5000/rencontres/${id2}/accepter`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: email2 }),
