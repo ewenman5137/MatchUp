@@ -77,8 +77,6 @@ export default function Sidebar() {
         {/* Navigation */}
         <nav className="space-y-2">
           <SidebarLink href="/profil/user" icon={<UserCircle size={18} />} label="Profil" isActive={isActive} />
-          <SidebarLink href="/profil/classement" icon={<Trophy size={18} />} label="Classement" isActive={isActive} />
-          <SidebarLink href="/profil/historique" icon={<History size={18} />} label="Historique" isActive={isActive} />
           <SidebarLink href="/profil/prochain-match" icon={<Calendar size={18} />} label="Prochain match" isActive={isActive} />
         </nav>
       </div>
