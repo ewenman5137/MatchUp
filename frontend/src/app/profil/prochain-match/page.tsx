@@ -154,7 +154,7 @@ export default function ProchainsMatchsPage() {
                   <p className="text-sm text-gray-500">
                     {match.date} à {match.heure}
                   </p>
-                  <p className="font-semibold text-lg">{match.sport} — {match.mode}</p>
+                  <p className="font-semibold text-lg">{match.sport}</p>
                   <p className="text-sm text-gray-500">📍 {match.lieu}</p>
                   <p className="text-sm text-gray-500">💰 {match.prix}</p>
                   <p className="text-sm mt-1 font-medium">🎾 Participants : {match.participants}</p>
