@@ -33,27 +33,68 @@ export default function ProchainsMatchsPage() {
   const [tournoisParticipant, setTournoisParticipant] = useState<Tournoi[]>([]);
   const [tournoisOrganisateur, setTournoisOrganisateur] = useState<Tournoi[]>([]);
 
+  const annulerMatch = async (matchId: number) => {
+    const confirm = window.confirm("Souhaitez-vous vraiment annuler ce match ?");
+    if (!confirm) return;
+
+    try {
+      const res = await fetch("http://localhost:5000/reservation/annuler", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reservation_id: matchId, email: userEmail })
+      });
+
+      if (res.ok) {
+        alert("Match annulé avec succès ✅");
+        setMatches((prev) => prev.filter((m) => m.id !== matchId));
+      } else {
+        const data = await res.json();
+        alert("Erreur : " + data.error);
+      }
+    } catch (err) {
+      console.error("Erreur d'annulation :", err);
+    }
+  };
+
+  const desinscrireTournoi = async (tournoiId: number) => {
+    const confirm = window.confirm("Souhaitez-vous vous désinscrire de ce tournoi ?");
+    if (!confirm) return;
+
+    try {
+      const res = await fetch("http://localhost:5000/desinscription-tournoi", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tournoi_id: tournoiId, email: userEmail })
+      });
+
+      if (res.ok) {
+        alert("Désinscription réussie ✅");
+        setTournoisParticipant((prev) => prev.filter((t) => t.id !== tournoiId));
+      } else {
+        const data = await res.json();
+        alert("Erreur : " + data.error);
+      }
+    } catch (err) {
+      console.error("Erreur désinscription :", err);
+    }
+  };
+
   useEffect(() => {
-    const userId = localStorage.getItem("userId");
-    if (!userId) return;
+  const userId = localStorage.getItem("userId");
+  if (!userId) return;
 
-    fetch(`http://localhost:5000/api/utilisateur/${userId}`)
-      .then((res) => res.json())
-      .then((userData) => {
-        setUserEmail(userData.email);
+  fetch(`http://localhost:5000/api/utilisateur/${userId}`)
+    .then((res) => res.json())
+    .then((userData) => {
+      const email = userData.email;
+      setUserEmail(email);
 
-        return Promise.all([
-          fetch("http://localhost:5000/api/utilisateurs").then((res) => res.json()),
-          fetch(`http://localhost:5000/api/utilisateur/${userId}/prochains-matchs`).then((res) =>
-            res.json()
-          ),
-          fetch(`http://localhost:5000/tournois`).then((res) => res.json()),
-          fetch(`http://localhost:5000/api/utilisateur/${userData.email}/organise-tournoi`).then((res) =>
-            res.json()
-          )
-        ]);
-      })
-      .then(([allUsers, reservations, allTournois, organisateurResponse]) => {
+      return Promise.all([
+        fetch("http://localhost:5000/api/utilisateurs").then((res) => res.json()),
+        fetch(`http://localhost:5000/api/utilisateur/${userId}/prochains-matchs`).then((res) => res.json()),
+        fetch(`http://localhost:5000/api/utilisateur/${email}/tournois-inscrits`).then((res) => res.json()),
+        fetch(`http://localhost:5000/api/utilisateur/${email}/organise-tournoi`).then((res) => res.json()),
+      ]).then(([allUsers, reservations, allTournois, organisateurResponse]) => {
         const matchesEnrichis = reservations.map((match: Match) => {
           const participants = match.joueurs
             .map((email) => {
@@ -67,14 +108,15 @@ export default function ProchainsMatchsPage() {
         setMatches(matchesEnrichis);
 
         const participant = allTournois.filter(
-          (t: Tournoi) => t.participants?.includes(userEmail) && t.organisateur !== userEmail
+          (t: Tournoi) => t.participants?.includes(email) && t.organisateur !==null
         );
-
         setTournoisParticipant(participant);
         setTournoisOrganisateur(organisateurResponse.tournois || []);
-      })
-      .catch((err) => console.error("Erreur :", err));
-  }, []);
+      });
+    })
+    .catch((err) => console.error("Erreur :", err));
+}, []);
+
 
   const handleModifierScore = async (matchId: number) => {
     try {
@@ -158,33 +200,45 @@ export default function ProchainsMatchsPage() {
                   <p className="text-sm text-gray-500">📍 {match.lieu}</p>
                   <p className="text-sm text-gray-500">💰 {match.prix}</p>
                   <p className="text-sm mt-1 font-medium">🎾 Participants : {match.participants}</p>
+                  <div className="flex gap-4 mt-2">
+                    <button className="text-sm text-red-600 hover:underline" onClick={() => annulerMatch(match.id)}>Annuler ce match</button>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         )}
 
-        <h2 className="text-xl font-semibold mt-12 mb-4">🎾 Tournois auxquels je participe</h2>
-        {tournoisParticipant.length === 0 ? (
-          <p className="text-sm text-gray-500">Aucun tournoi prévu où vous êtes inscrit(e).</p>
-        ) : (
-          <div className="space-y-4">
-            {tournoisParticipant.map((t) => (
-              <div key={t.id} className="border rounded p-4 shadow-sm flex items-center gap-4">
-                <div className="w-[80px] h-[80px] relative shrink-0">
-                  <img src={`/accueil/${t.sport.toLowerCase()}.png`} alt={t.sport} className="w-full h-full object-contain rounded" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">{t.date} à {t.heure}</p>
-                  <p className="text-lg font-semibold">{t.titre}</p>
-                  <p className="text-sm text-gray-500">📍 UQAC, Chicoutimi</p>
-                  <p className="text-sm text-gray-500">🧑‍🤝‍🧑 Format : {t.tableau}</p>
-                  <p className="text-sm mt-1 font-medium">Participants : {t.participants.join(", ")}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+     <h2 className="text-xl font-semibold mt-12 mb-4">🏅 Tournois auxquels je participe</h2>
+{tournoisParticipant.length === 0 ? (
+  <p className="text-sm text-gray-500">Aucun tournoi prévu où vous êtes inscrit(e).</p>
+) : (
+  <div className="space-y-4">
+    {tournoisParticipant.map((t) => (
+      <div key={t.id} className="border rounded p-4 shadow-sm flex items-center gap-4">
+        <div className="w-[80px] h-[80px] relative shrink-0">
+          <img src={`/accueil/${t.sport.toLowerCase()}.png`} alt={t.sport} className="w-full h-full object-contain rounded" />
+        </div>
+        <div>
+          <p className="text-sm text-gray-500">{t.date} à {t.heure}</p>
+          <p className="text-lg font-semibold">{t.titre}</p>
+          <p className="text-sm text-gray-500">📍 UQAC, Chicoutimi</p>
+          <p className="text-sm text-gray-500">🧑‍🤝‍🧑 Format : {t.tableau}</p>
+          <p className="text-sm mt-1 font-medium">Participants : {t.participants.join(", ")}</p>
+          <button
+  onClick={() => desinscrireTournoi(t.id)}
+  className="mt-2 text-sm text-red-600 hover:underline"
+>
+  Se désinscrire de ce tournoi
+</button>
+
+        </div>
+      </div>
+    ))}
+  </div>
+)}
+
+
 
         <h2 className="text-xl font-semibold mt-12 mb-4">🧑‍💼 Tournois que j’organise</h2>
         {tournoisOrganisateur.length === 0 ? (
@@ -204,6 +258,10 @@ export default function ProchainsMatchsPage() {
                     <p className="text-sm text-gray-500">🧑‍🤝‍🧑 Format : {t.tableau}</p>
                     <p className="text-sm text-gray-500">📧 Organisateur : {t.organisateur}</p>
                     <p className="text-sm mt-1 font-medium">Participants : {t.participants.join(", ")}</p>
+                    <button
+                      onClick={() => desinscrireTournoi(t.id)}
+                      className="text-red-600 text-sm hover:underline mt-2"
+                    ></button>
                   </div>
                 </div>
 

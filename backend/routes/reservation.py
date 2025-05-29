@@ -157,3 +157,27 @@ def get_prochains_matchs_user(idUser):
     except Exception as e:
         print("Erreur récupération prochains matchs:", e)
         return jsonify({"error": "Erreur serveur"}), 500
+    
+
+@reservation_bp.route("/reservation/annuler", methods=["POST"])
+def annuler_reservation():
+    data = request.get_json()
+    try:
+        reservation_id = data.get("reservation_id")
+        email = data.get("email")
+
+        reservation = Reservation.query.get(reservation_id)
+        if not reservation:
+            return jsonify({"error": "Réservation introuvable"}), 404
+
+        if email not in (reservation.joueurs or []):
+            return jsonify({"error": "Vous ne pouvez pas annuler cette réservation"}), 403
+
+        db.session.delete(reservation)
+        db.session.commit()
+
+        return jsonify({"message": "Réservation annulée ✅"}), 200
+
+    except Exception as e:
+        print("❌ Erreur annulation réservation:", e)
+        return jsonify({"error": "Erreur lors de l'annulation"}), 500
