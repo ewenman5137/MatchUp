@@ -110,7 +110,9 @@ export default function ReservationForm() {
         }),
       });
 
-      router.push("/reservation/form/confirmation");
+      router.push("/");
+      // ✅ notification à l’utilisateur
+      alert("Votre réservation a bien été enregistrée !");
     } catch (err) {
       console.error("Erreur lors du paiement :", err);
       alert("Une erreur est survenue, merci de réessayer.");
