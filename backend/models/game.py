@@ -8,7 +8,3 @@ class Game(db.Model):
     scoreEquipe2 = db.Column(db.Integer)
     statutGame = db.Column(db.String)
     sets = db.Column(db.String)
-
-    # Clé étrangère vers RencontreProposee
-    rencontre_id = db.Column(db.Integer, db.ForeignKey('rencontre_proposee.id'), nullable=False)
-    rencontre = db.relationship('RencontreProposee', backref='games')

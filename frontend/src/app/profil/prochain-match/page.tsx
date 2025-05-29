@@ -158,12 +158,6 @@ export default function ProchainsMatchsPage() {
                   <p className="text-sm text-gray-500">📍 {match.lieu}</p>
                   <p className="text-sm text-gray-500">💰 {match.prix}</p>
                   <p className="text-sm mt-1 font-medium">🎾 Participants : {match.participants}</p>
-                  <button
-                    onClick={() => handleModifierScore(match.id)}
-                    className="mt-2 text-sm text-blue-600 hover:underline"
-                  >
-                    Modifier le score
-                  </button>
                 </div>
               </div>
             ))}

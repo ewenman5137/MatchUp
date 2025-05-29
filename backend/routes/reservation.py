@@ -1,11 +1,12 @@
 from flask import Blueprint, request, jsonify
 from models.utilisateur import Utilisateur, db
 from models.reservation import Reservation
+# (et les autres à venir : terrain, tournoi, etc.)
+
 from datetime import datetime
 
 reservation_bp = Blueprint('reservation', __name__)
 
-# ✅ Création d'une réservation
 @reservation_bp.route('/reservation', methods=['POST'])
 def create_reservation():
     data = request.get_json()
@@ -42,9 +43,9 @@ def create_reservation():
 
     except Exception as e:
         print("❌ Erreur :", str(e))
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Erreur lors de la création de la réservation"}), 500
 
-# ✅ Lecture de toutes les réservations
+
 @reservation_bp.route('/reservations', methods=['GET'])
 def get_reservations():
     try:
@@ -67,10 +68,10 @@ def get_reservations():
         return jsonify(result), 200
 
     except Exception as e:
-        print("❌ ERREUR FLASK /reservations :", e)
+        print("❌ ERREUR FLASK /reservations :", e)  # 👈 AIDE AU DEBUG
         return jsonify({"error": "Impossible de charger les réservations"}), 500
 
-# ✅ Suppression d'une réservation
+
 @reservation_bp.route('/reservation/<int:id>', methods=['DELETE'])
 def delete_reservation(id):
     reservation = Reservation.query.get(id)
@@ -80,15 +81,14 @@ def delete_reservation(id):
         return jsonify({"message": "Réservation supprimée ✅"}), 200
     return jsonify({"error": "Réservation introuvable"}), 404
 
-# ✅ Vérification des créneaux disponibles
 @reservation_bp.route('/api/agenda/disponibilites', methods=['GET'])
 def get_disponibilites():
     sport = request.args.get("sport")
     date = request.args.get("date")  # format : YYYY-MM-DD
 
     horaires = [
-        "8h00 - 9h00", "9h00 - 10h00", "10h00 - 11h00", "11h00 - 12h00",
-        "12h00 - 13h00", "13h00 - 14h00", "14h00 - 15h00"
+        "8h30 - 9h30", "9h30 - 10h30", "10h30 - 11h30", "11h30 - 12h30",
+        "12h30 - 13h30", "13h30 - 14h30", "14h30 - 15h30"
     ]
 
     MAX_RESERVATIONS = 2  # Exemple : 2 terrains disponibles
@@ -111,7 +111,6 @@ def get_disponibilites():
 
     return jsonify(disponibilites), 200
 
-# ✅ Prochains matchs de l'utilisateur
 @reservation_bp.route("/api/utilisateur/<int:idUser>/prochains-matchs", methods=["GET"])
 def get_prochains_matchs_user(idUser):
     try:
@@ -124,20 +123,23 @@ def get_prochains_matchs_user(idUser):
 
         reservations = Reservation.query.filter(
             Reservation.dateReservation >= now.strftime("%Y-%m-%d"),
-            Reservation.statutReservation.ilike("confirmée")
+            Reservation.statutReservation == "confirmee"
         ).all()
 
         prochains = []
         for r in reservations:
-            if r.joueurs and email_user in r.joueurs:
+            if email_user in (r.joueurs or []):
+                date_str = r.dateReservation
+                heure_str = r.heureDebut
+
+                # Concatène et convertit la date + heure
                 try:
-                    heure_formatee = r.heureDebut.replace("h", ":").zfill(5)
-                    datetime_match = datetime.strptime(f"{r.dateReservation} {heure_formatee}", "%Y-%m-%d %H:%M")
+                    datetime_match = datetime.strptime(f"{date_str} {heure_str}", "%Y-%m-%d %H:%M")
                     if datetime_match >= now:
                         prochains.append({
                             "id": r.idReservation,
-                            "date": r.dateReservation,
-                            "heure": heure_formatee,
+                            "date": date_str,
+                            "heure": heure_str,
                             "sport": r.sport,
                             "lieu": "UQAC",
                             "mode": r.modeJeu,
@@ -147,9 +149,11 @@ def get_prochains_matchs_user(idUser):
                 except Exception as e:
                     print("Erreur conversion date/heure :", e)
 
+        # Trie par date
         prochains.sort(key=lambda x: f"{x['date']} {x['heure']}")
+
         return jsonify(prochains), 200
 
     except Exception as e:
         print("Erreur récupération prochains matchs:", e)
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Erreur serveur"}), 500

@@ -108,18 +108,18 @@ with app.app_context():
     db.session.commit()
 
     # 🎾 Jeux liés aux rencontres
-    game1 = Game(scoreEquipe1=11, scoreEquipe2=9, statutGame="Terminé", sets="11-9;11-8", rencontre_id=rencontre1.id)
-    game2 = Game(scoreEquipe1=10, scoreEquipe2=12, statutGame="Terminé", sets="10-12;11-9;9-11", rencontre_id=rencontre1.id)
-    game3 = Game(scoreEquipe1=11, scoreEquipe2=8, statutGame="Terminé", sets="11-9;11-8", rencontre_id=rencontre1.id)
-    game4 = Game(scoreEquipe1=7, scoreEquipe2=11, statutGame="Terminé", sets="7-11;6-11", rencontre_id=rencontre2.id)
-    game5 = Game(scoreEquipe1=11, scoreEquipe2=6, statutGame="Terminé", sets="11-6;11-4", rencontre_id=rencontre2.id)
+    game1 = Game(scoreEquipe1=11, scoreEquipe2=9, statutGame="Terminé", sets="11-9;11-8")
+    game2 = Game(scoreEquipe1=10, scoreEquipe2=12, statutGame="Terminé", sets="10-12;11-9;9-11")
+    game3 = Game(scoreEquipe1=11, scoreEquipe2=8, statutGame="Terminé", sets="11-9;11-8")
+    game4 = Game(scoreEquipe1=7, scoreEquipe2=11, statutGame="Terminé", sets="7-11;6-11")
+    game5 = Game(scoreEquipe1=11, scoreEquipe2=6, statutGame="Terminé", sets="11-6;11-4")
 
     extra_games = [
-        Game(scoreEquipe1=2, scoreEquipe2=1, statutGame="Terminé", sets="11-3;8-11;11-7", rencontre_id=rencontre1.id),
-        Game(scoreEquipe1=1, scoreEquipe2=2, statutGame="Terminé", sets="10-12;11-9;9-11", rencontre_id=rencontre1.id),
-        Game(scoreEquipe1=2, scoreEquipe2=0, statutGame="Terminé", sets="11-7;11-4", rencontre_id=rencontre2.id),
-        Game(scoreEquipe1=0, scoreEquipe2=2, statutGame="Terminé", sets="9-11;8-11", rencontre_id=rencontre2.id),
-        Game(scoreEquipe1=2, scoreEquipe2=1, statutGame="Terminé", sets="11-6;9-11;11-8", rencontre_id=rencontre2.id)
+        Game(scoreEquipe1=2, scoreEquipe2=1, statutGame="Terminé", sets="11-3;8-11;11-7"),
+        Game(scoreEquipe1=1, scoreEquipe2=2, statutGame="Terminé", sets="10-12;11-9;9-11"),
+        Game(scoreEquipe1=2, scoreEquipe2=0, statutGame="Terminé", sets="11-7;11-4"),
+        Game(scoreEquipe1=0, scoreEquipe2=2, statutGame="Terminé", sets="9-11;8-11"),
+        Game(scoreEquipe1=2, scoreEquipe2=1, statutGame="Terminé", sets="11-6;9-11;11-8")
     ]
 
     # 🏆 Tournois

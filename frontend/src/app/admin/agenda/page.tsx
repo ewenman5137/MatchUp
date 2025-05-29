@@ -57,69 +57,66 @@ export default function AgendaAdmin() {
     setSlotsBloques(results.filter((s): s is string => s !== null));
   };
 
+  const fetchUserId = async (email: string) => {
+    const res = await fetch(`http://localhost:5000/api/utilisateur/id-par-email?email=${email}`);
+    if (!res.ok) throw new Error("Impossible de récupérer l'utilisateur");
+    const data = await res.json();
+    return data.id;
+  };
+
   useEffect(() => {
     fetchSlotsBloques();
   }, [selectedSport, selectedDate]);
 
   const handleConfirm = async () => {
-    const dateISO = selectedDate.toISOString().split("T")[0];
-    const email1 = joueur1.trim();
-    const email2 = joueur2.trim();
+  const dateISO = selectedDate.toISOString().split("T")[0];
+  const email1 = joueur1.trim();
+  const email2 = joueur2.trim();
 
-    if (!email1 || !email2) {
-      alert("Veuillez entrer les deux adresses email des joueurs.");
-      return;
-    }
+  if (!email1 || !email2) {
+    alert("Veuillez entrer les deux adresses email des joueurs.");
+    return;
+  }
 
-    try {
-      for (const slot of selectedSlots) {
-        const [heureDebutBrut] = slot.split(" - ");
-        const heureDebut = convertToTime(heureDebutBrut);
+  try {
+    for (const slot of selectedSlots) {
+      const [heureDebutBrut, heureFinBrut] = slot.split(" - ");
+      const heureDebut = convertToTime(heureDebutBrut);
+      const heureFin = convertToTime(heureFinBrut);
 
-        // 1) Création de la rencontre pour joueur1
-        const creationRes = await fetch("http://localhost:5000/rencontres", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            emailInitiateur: email1,
-            sport: selectedSport,
-            niveau: "Aucun",
-            date: dateISO,
-            heure: heureDebut,
-            duree: 1,
-            commentaire: "Ajout via interface admin",
-          }),
-        });
-        const creationData = await creationRes.json();
-        if (!creationRes.ok)
-          throw new Error(creationData.error || "Erreur création rencontre");
+      const res = await fetch("http://localhost:5000/reservation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          dateReservation: dateISO,
+          heureDebut,
+          heureFin,
+          statutReservation: "confirmee",
+          modeJeu: "match",
+          sport: selectedSport,
+          prix: "Gratuit",
+          joueurs: [email1, email2]
+        }),
+      });
 
-        const rencontreId = creationData.id;
-
-        // 2) Acceptation de la rencontre pour joueur2
-        const acceptRes = await fetch(
-          `http://localhost:5000/rencontres/${rencontreId}/accepter`,
-          {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ emailInvite: email2 }),
-          }
-        );
-        const acceptData = await acceptRes.json();
-        if (!acceptRes.ok)
-          throw new Error(acceptData.error || "Erreur acceptation rencontre");
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Erreur lors de la création de la réservation");
       }
-
-      alert("Rencontres et réservations créées avec succès !");
-      setSelectedSlots([]);
-      setJoueur1("");
-      setJoueur2("");
-      setShowPopup(false);
-    } catch (error) {
-      console.error("❌ Erreur :", error);
-      alert("Erreur lors de la création des rencontres.");
     }
-  };
+
+    alert("Match(s) réservé(s) avec succès !");
+    setSelectedSlots([]);
+    setJoueur1("");
+    setJoueur2("");
+    setShowPopup(false);
+  } catch (error) {
+    console.error("Erreur lors de la création des matchs :", error);
+    alert("Une erreur est survenue.");
+  }
+};
+
+
 
   const handleBlocage = async () => {
     if (!blocageSlot || !blocageDate) return;
