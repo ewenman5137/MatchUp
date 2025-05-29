@@ -117,7 +117,7 @@ export default function RechercherAdversairePage() {
   return (
     <div className="min-h-screen bg-white">
       <Header />
-      <div className="max-w-4xl mx-auto py-10 px-6">
+      <div className="max-w-4xl mx-auto py-10 px-6 mt-28">
         <h1 className="text-2xl font-semibold mb-4">🔍 Rechercher un adversaire</h1>
         <div className="flex gap-4 mb-6">
           {["Tous", "Tennis", "Badminton", "Pickleball"].map((s) => {
@@ -212,7 +212,7 @@ export default function RechercherAdversairePage() {
                 <div>
                   <p className="font-semibold">{r.sport} - {r.niveau}</p>
                   <p className="text-sm text-gray-600">{r.date} à {r.heure} — {r.duree}h</p>
-                  <p className="text-sm text-gray-500">Proposé par : {r.joueur1_email}</p>
+                  <p className="text-sm text-gray-500">Proposé par : {r.joueur1}</p>
                   {r.commentaire && <p className="text-sm italic mt-1">💬 {r.commentaire}</p>}
                 </div>
                 <button onClick={() => accepterRencontre(r.id)} className="bg-[#7A874C] text-white px-4 py-2 rounded">Accepter le match</button>
