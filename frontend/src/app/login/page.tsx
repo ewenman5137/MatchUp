@@ -1,10 +1,11 @@
+// app/(auth)/page.tsx (ou là où se trouve ton LoginPage)
 "use client";
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");           
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
@@ -16,13 +17,15 @@ export default function LoginPage() {
     const res = await fetch("http://localhost:5000/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password })     // ✅ Envoyer "email" au lieu de "username"
+      body: JSON.stringify({ email, password })
     });
 
     const data = await res.json();
     if (res.ok) {
       localStorage.setItem("token", data.token || "fake-token");
-      localStorage.setItem("userId", data.user.id);  // 👈 Enregistre l'ID
+      localStorage.setItem("userId", data.user.id);
+      localStorage.setItem("role", data.user.role);      // ← on ajoute ceci
+      localStorage.setItem("email", data.user.email);    // ← et on stocke l’email
 
       if (data.user.role === "admin") {
         router.push("/admin/dashboard");
