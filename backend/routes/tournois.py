@@ -150,3 +150,30 @@ def supprimer_tournoi(id):
     except Exception as e:
         print("❌ Erreur suppression tournoi:", e)
         return jsonify({"error": "Erreur interne"}), 500
+
+
+@tournoi_bp.route("/desinscription-tournoi", methods=["POST"])
+def desinscrire_utilisateur():
+    data = request.get_json()
+    try:
+        email = data.get("email")
+        tournoi_id = data.get("tournoi_id")
+
+        tournoi = Tournoi.query.get(tournoi_id)
+        if not tournoi:
+            return jsonify({"error": "Tournoi introuvable"}), 404
+
+        utilisateur = Utilisateur.query.filter_by(email=email).first()
+        if not utilisateur:
+            return jsonify({"error": "Utilisateur non trouvé"}), 404
+
+        if utilisateur in tournoi.participants:
+            tournoi.participants.remove(utilisateur)
+            db.session.commit()
+            return jsonify({"message": "Désinscription réussie ✅"}), 200
+        else:
+            return jsonify({"error": "Utilisateur non inscrit à ce tournoi"}), 400
+
+    except Exception as e:
+        print("❌ Erreur désinscription tournoi:", e)
+        return jsonify({"error": "Erreur lors de la désinscription"}), 500

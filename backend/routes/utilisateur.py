@@ -184,3 +184,33 @@ def get_user_id_by_email():
         "prenom": utilisateur.prenom,
         "nom": utilisateur.nom
     }), 200
+
+
+@utilisateur_bp.route("/api/utilisateur/<email>/tournois-inscrits", methods=["GET"])
+def get_tournois_inscrits(email):
+    try:
+        utilisateur = Utilisateur.query.filter_by(email=email).first()
+        if not utilisateur:
+            return jsonify({"error": "Utilisateur introuvable"}), 404
+
+        tournois_inscrits = utilisateur.tournois  # doit venir de la relation many-to-many
+
+        result = []
+        for t in tournois_inscrits:
+            participants_emails = [u.email for u in t.participants]  # <- important
+            result.append({
+                "id": t.idTournoi,
+                "titre": t.nomTournoi,
+                "date": t.dateTournoi,
+                "heure": t.heureDebut,
+                "sport": t.sport.nomSport if t.sport else "Inconnu",
+                "tableau": t.tableau,
+                "organisateur": t.emailOrganisateur,
+                "participants": participants_emails
+            })
+
+        return jsonify(result), 200
+
+    except Exception as e:
+        print("❌ Erreur lors de la récupération des tournois inscrits :", e)
+        return jsonify({"error": "Erreur serveur"}), 500
