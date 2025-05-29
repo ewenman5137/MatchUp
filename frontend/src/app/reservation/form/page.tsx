@@ -15,14 +15,12 @@ export default function ReservationForm() {
   const [price, setPrice] = useState("Gratuit");
   const [players, setPlayers] = useState([{ id: 1, isMember: undefined }]);
   const [nextId, setNextId] = useState(2);
-  const [totalPrice, setTotalPrice] = useState("Gratuit");
   const [sport, setSport] = useState<string | null>(null);
   const [reservationId, setReservationId] = useState<string | null>(null);
   const [date, setDate] = useState<string | null>(null);
   const [heureDebut, setHeureDebut] = useState<string | null>(null);
   const [heureFin, setHeureFin] = useState<string | null>(null);
 
-  // Récupération des données de la réservation stockée
   useEffect(() => {
     setTimeout(() => {
       setSport(sessionStorage.getItem("reservation_sport"));
@@ -58,16 +56,31 @@ export default function ReservationForm() {
     return nonUqac === 0 ? "Gratuit" : `${nonUqac * 7}$`;
   };
 
-  // On poste d'abord la rencontre, puis le paiement, puis on redirige
   const handlePay = async (paymentMode: "cash" | "online") => {
     const form = document.getElementById("reservationForm") as HTMLFormElement;
     if (!form.checkValidity()) {
       form.reportValidity();
       return;
     }
-    // 1) composer l'objet data
+
     const formData = new FormData(form);
-    const payload: any = {
+    const joueursData: any[] = [];
+
+    formData.forEach((val, key) => {
+      if (key.startsWith("joueur_")) {
+        const [_, id, field] = key.split("_");
+        let joueur = joueursData.find((j) => j.id === id);
+        if (!joueur) {
+          joueur = { id };
+          joueursData.push(joueur);
+        }
+        joueur[field] = val;
+      }
+    });
+
+    const emails = joueursData.map((j) => j.email);
+
+    const payload = {
       sport,
       mode,
       reservationId,
@@ -75,43 +88,28 @@ export default function ReservationForm() {
       heureDebut,
       heureFin,
       prix: price,
-      joueurs: [],
+      joueurs: emails, // ✅ juste les emails
     };
-    formData.forEach((val, key) => {
-      if (key.startsWith("joueur_")) {
-        const [_, id, field] = key.split("_");
-        let ext = payload.joueurs.find((j: any) => j.id === id);
-        if (!ext) {
-          ext = { id };
-          payload.joueurs.push(ext);
-        }
-        ext[field] = val;
-      }
-    });
 
     try {
-      // 2) POST rencontre
       await fetch("http://localhost:5000/reservation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
-      // 3) POST paiement
-      const payPayload = {
-        produit:      `Réservation ${sport}`,
-        clientEmail:  payload.joueurs.map((j: any) => j.email).join(", "),
-        statut:       "Payé",
-        mode:         paymentMode,
-        prix:         calculateTotal().replace("$",""),
-      };
       await fetch("http://localhost:5000/paiements", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payPayload),
+        body: JSON.stringify({
+          produit: `Réservation ${sport}`,
+          clientEmail: emails.join(", "),
+          statut: "Payé",
+          mode: paymentMode,
+          prix: calculateTotal().replace("$", ""),
+        }),
       });
 
-      // 4) On redirige vers la page de confirmation
       router.push("/reservation/form/confirmation");
     } catch (err) {
       console.error("Erreur lors du paiement :", err);
@@ -133,16 +131,18 @@ export default function ReservationForm() {
           </h2>
 
           <form id="reservationForm" className="space-y-4">
-            <input type="hidden" name="dateReservation" value={date||""} />
-            <input type="hidden" name="heureDebut"      value={heureDebut||""} />
-            <input type="hidden" name="heureFin"        value={heureFin||""} />
-            <input type="hidden" name="prix"            value={price} />
+            <input type="hidden" name="dateReservation" value={date || ""} />
+            <input type="hidden" name="heureDebut" value={heureDebut || ""} />
+            <input type="hidden" name="heureFin" value={heureFin || ""} />
+            <input type="hidden" name="prix" value={price} />
+
             {players.map((player, idx) => (
               <div key={player.id}>
                 <div className="flex justify-between items-center">
                   <h3 className="font-semibold">Joueur {player.id}</h3>
                   {players.length > 1 && (
-                    <button type="button"
+                    <button
+                      type="button"
                       className="text-red-600 text-sm hover:underline"
                       onClick={() => removePlayer(idx)}
                     >
@@ -151,40 +151,43 @@ export default function ReservationForm() {
                   )}
                 </div>
 
-                <input type="hidden"
-                  name={`joueur_${player.id}_id`}
-                  value={player.id}
-                />
+                <input type="hidden" name={`joueur_${player.id}_id`} value={player.id} />
 
                 <label>Étudiant(e)/employé UQAC ?</label>
                 <div className="flex space-x-4">
                   <label>
-                    <input type="radio"
+                    <input
+                      type="radio"
                       name={`joueur_${player.id}_isMember`}
                       value="oui"
                       onChange={(e) => handleMembershipChange(e, idx)}
                       required
-                    /> Oui
+                    />{" "}
+                    Oui
                   </label>
                   <label>
-                    <input type="radio"
+                    <input
+                      type="radio"
                       name={`joueur_${player.id}_isMember`}
                       value="non"
                       onChange={(e) => handleMembershipChange(e, idx)}
-                    /> Non
+                    />{" "}
+                    Non
                   </label>
                 </div>
 
                 {player.isMember !== false ? (
                   <>
                     <label>Email UQAC</label>
-                    <input type="email"
+                    <input
+                      type="email"
                       name={`joueur_${player.id}_email`}
                       className="w-full border p-2 rounded"
                       required
                     />
                     <label>Numéro étudiant</label>
-                    <input type="text"
+                    <input
+                      type="text"
                       name={`joueur_${player.id}_numero`}
                       className="w-full border p-2 rounded"
                       required
@@ -193,19 +196,22 @@ export default function ReservationForm() {
                 ) : (
                   <>
                     <label>Prénom</label>
-                    <input type="text"
+                    <input
+                      type="text"
                       name={`joueur_${player.id}_prenom`}
                       className="w-full border p-2 rounded"
                       required
                     />
                     <label>Nom</label>
-                    <input type="text"
+                    <input
+                      type="text"
                       name={`joueur_${player.id}_nom`}
                       className="w-full border p-2 rounded"
                       required
                     />
                     <label>Email</label>
-                    <input type="email"
+                    <input
+                      type="email"
                       name={`joueur_${player.id}_email`}
                       className="w-full border p-2 rounded"
                       required
@@ -214,16 +220,11 @@ export default function ReservationForm() {
                 )}
               </div>
             ))}
-
-            {(mode === "creer_tournoi" || mode === "rechercher_adversaire") && (
-              <>
-                {/* … champs tournoi / adversaire … */}
-              </>
-            )}
           </form>
 
           {mode === "jouer_amis" && players.length < 4 && (
-            <button type="button"
+            <button
+              type="button"
               className="mt-4 px-4 py-2 bg-green-700 text-white rounded"
               onClick={addPlayer}
             >
@@ -235,9 +236,15 @@ export default function ReservationForm() {
         <div className="w-80 mt-24 space-y-4">
           <div className="bg-white shadow p-4 rounded-lg">
             <h3 className="font-semibold">Résumé</h3>
-            <p><strong>Sport :</strong> {sport || "Non précisé"}</p>
-            <p><strong>Créneau :</strong> {`${heureDebut} à ${heureFin}`}</p>
-            <p><strong>Prix :</strong> {price}</p>
+            <p>
+              <strong>Sport :</strong> {sport || "Non précisé"}
+            </p>
+            <p>
+              <strong>Créneau :</strong> {`${heureDebut} à ${heureFin}`}
+            </p>
+            <p>
+              <strong>Prix :</strong> {price}
+            </p>
 
             <button
               className="w-full bg-green-700 text-white py-2 rounded mb-2"

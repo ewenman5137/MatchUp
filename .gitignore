@@ -3,3 +3,4 @@
 /backend/routes/admin/__pycache__
 frontend/pnpm-lock.yaml
 frontend/pnpm-lock.yaml
+matchup.db
