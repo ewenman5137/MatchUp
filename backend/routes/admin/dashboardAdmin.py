@@ -6,7 +6,7 @@ dashboard_bp = Blueprint('dashboard', __name__)
 
 @dashboard_bp.route('/api/dashboard/stats', methods=['GET'])
 def get_dashboard_stats():
-    # --- 1) Statistiques principales ---
+    # Statistiques principales
     # on ne compte que les vrais UQAC (email en @uqac.ca et pas _pseudo)
     total_users = Utilisateur.query \
         .filter(Utilisateur.email.endswith('@uqac.ca')) \
@@ -28,7 +28,7 @@ def get_dashboard_stats():
     total_slots    = total_terrains * 7 * 8
     occupation_rate = f"{min(int(reservations_this_week / total_slots * 100), 100)}%"
 
-    # --- 2) Activités récentes (fusion par créneau) ---
+    # Activités récentes (fusion par créneau)
     activities = []
     grouped = {}
 
@@ -41,7 +41,7 @@ def get_dashboard_stats():
     for r in recent_res:
         key = (r.sport, r.dateReservation, r.heureDebut)
 
-        # ici : r.joueurs est une liste de dict {…, "email": "xxx" }
+        # ici : r.joueurs est une liste de dict
         raw = r.joueurs or []
         emails = []
         for entry in raw:
@@ -77,7 +77,7 @@ def get_dashboard_stats():
             "date":        dt.isoformat()
         })
 
-    # B) Paiements manuels
+    # Paiements manuels
     recent_pay = (
         Paiement.query
         .order_by(Paiement.datePaiement.desc())

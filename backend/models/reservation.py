@@ -1,7 +1,7 @@
 from models import db
 
 class Reservation(db.Model):
-    __tablename__ = 'reservation'  # ✅ Cette ligne est indispensable
+    __tablename__ = 'reservation' 
 
     idReservation = db.Column(db.Integer, primary_key=True)
     heureDebut = db.Column(db.String(10), nullable=False)

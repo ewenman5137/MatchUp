@@ -10,8 +10,6 @@ import { fr } from "date-fns/locale";
 export default function CreerTournoiPage2() {
   const router = useRouter();
   const searchParams = useSearchParams();
-
-  // 🏷️ Récupération des paramètres de l'étape 1
   const sport = searchParams.get("sport") || "Tennis";
   const date = searchParams.get("date") || "2025-07-16";
   const heure = searchParams.get("heure") || "18:00";
@@ -44,8 +42,8 @@ export default function CreerTournoiPage2() {
     nb_joueurs_max: maxJoueurs,
     niveau_requis: niveau,
     sexe,
-    email, // ✅ envoyé ici
-    organisateur: "Organisateur UQAC", // optionnel, à retirer ou garder pour l'affichage
+    email,
+    organisateur: "Organisateur UQAC",
     date_limite: `${date}T12:00`,
     tableau: typeTournoi
   };

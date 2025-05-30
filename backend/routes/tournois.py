@@ -3,7 +3,7 @@ from models import db
 from models.tournoi import Tournoi
 from models.sport import Sport
 from datetime import datetime, timedelta
-from models.utilisateur import Utilisateur  # ✅ À ajouter
+from models.utilisateur import Utilisateur  
 
 tournoi_bp = Blueprint("tournois", __name__)
 
@@ -30,7 +30,7 @@ def creer_tournoi():
             heureFin=heure_fin,
             sport_id=sport.idSport,
             tableau=data.get("tableau"),
-            emailOrganisateur=data.get("email")  # ✅ ajouté ici
+            emailOrganisateur=data.get("email")
         )
 
         db.session.add(nouveau_tournoi)
@@ -120,7 +120,7 @@ def est_organisateur(email):
                 "date": t.dateTournoi,
                 "heure": t.heureDebut,
                 "heureFin": t.heureFin,
-                "sport": t.sport.nomSport if t.sport else None,  # ✅ Vérifie si la relation est bien configurée
+                "sport": t.sport.nomSport if t.sport else None, 
                 "tableau": t.tableau,
                 "organisateur": t.emailOrganisateur,
                 "participants": [p.email for p in t.participants] if hasattr(t, "participants") else []
@@ -131,7 +131,7 @@ def est_organisateur(email):
     except Exception as e:
         print("❌ Erreur vérification organisateur:", e)
         import traceback
-        traceback.print_exc()  # ⬅️ Ajoute ceci pour voir la stacktrace complète
+        traceback.print_exc()  
         return jsonify({"error": "Erreur interne"}), 500
 
 

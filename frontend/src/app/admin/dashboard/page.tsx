@@ -13,7 +13,7 @@ type Activite = {
   id: string;
   type: "reservation" | "paiement";
   description: string;
-  date: string; // ISO
+  date: string; 
 };
 
 export default function DashboardPage() {

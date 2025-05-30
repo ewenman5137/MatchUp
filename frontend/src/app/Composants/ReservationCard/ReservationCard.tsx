@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 
 type Props = {
-  id: number; // identifiant unique
+  id: number; 
   date: string;
   sport: string;
   lieu: string;
@@ -12,7 +12,7 @@ type Props = {
   horaire?: string;
   joueurs?: number;
   prix?: string;
-  onCancel?: () => void; // callback pour rafraîchir après suppression
+  onCancel?: () => void;
 };
 
 
@@ -49,7 +49,7 @@ const ReservationCard = ({
       await fetch(`http://localhost:5000/reservation/${id}`, { method: "DELETE" });
       alert("Réservation annulée.");
       setShowConfirm(false);
-      onCancel?.(); // Rafraîchir la liste si callback fourni
+      onCancel?.(); 
     } catch (error) {
       console.error("Erreur lors de l'annulation :", error);
       alert("Erreur lors de l'annulation.");

@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from models.utilisateur import Utilisateur, db
 from models.reservation import Reservation
-# (et les autres à venir : terrain, tournoi, etc.)
+
 
 from datetime import datetime
 
@@ -91,7 +91,7 @@ def get_disponibilites():
         "12h30 - 13h30", "13h30 - 14h30", "14h30 - 15h30"
     ]
 
-    MAX_RESERVATIONS = 2  # Exemple : 2 terrains disponibles
+    MAX_RESERVATIONS = 2  
 
     disponibilites = []
 
@@ -132,7 +132,7 @@ def get_prochains_matchs_user(idUser):
                 date_str = r.dateReservation
                 heure_str = r.heureDebut
 
-                # Concatène et convertit la date + heure
+             
                 try:
                     datetime_match = datetime.strptime(f"{date_str} {heure_str}", "%Y-%m-%d %H:%M")
                     if datetime_match >= now:

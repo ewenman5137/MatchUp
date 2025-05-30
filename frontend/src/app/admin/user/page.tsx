@@ -42,7 +42,6 @@ export default function UtilisateurPage() {
       const role = (u.role || "").toLowerCase();
       return role !== "admin" && role !== "guest";
     })
-    // Recherche sur prénom/nom/email
     .filter((u) =>
       `${u.prenom} ${u.nom} ${u.email}`
         .toLowerCase()

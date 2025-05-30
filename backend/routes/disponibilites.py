@@ -41,7 +41,7 @@ def get_disponibilites():
     for r in reservations:
         h1 = int(r.heureDebut.split(":")[0])
         h2 = int(r.heureFin.split(":")[0])
-        for h in range(h1, h2):  # inclus h1, exclut h2
+        for h in range(h1, h2):  
             reserved_hours.append(f"{str(h).zfill(2)}:00")
 
     available_hours = [h for h in all_hours if h not in reserved_hours]

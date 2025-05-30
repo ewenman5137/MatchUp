@@ -20,7 +20,7 @@ def get_utilisateur(idUser):
     return jsonify({"error": "Utilisateur non trouvé"}), 404
 
 
-# ✅ Cette fonction doit être ici et pas dans le modèle
+
 @utilisateur_bp.route("/api/utilisateur/<int:idUser>", methods=["PUT"])
 def update_utilisateur(idUser):
     user = Utilisateur.query.get(idUser)
@@ -193,11 +193,11 @@ def get_tournois_inscrits(email):
         if not utilisateur:
             return jsonify({"error": "Utilisateur introuvable"}), 404
 
-        tournois_inscrits = utilisateur.tournois  # doit venir de la relation many-to-many
+        tournois_inscrits = utilisateur.tournois 
 
         result = []
         for t in tournois_inscrits:
-            participants_emails = [u.email for u in t.participants]  # <- important
+            participants_emails = [u.email for u in t.participants]
             result.append({
                 "id": t.idTournoi,
                 "titre": t.nomTournoi,
