@@ -1,7 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 db = SQLAlchemy()
 
-# 1. Import uniquement les classes de modèle (PAS les tables d'association)
+
 from .utilisateur import Utilisateur
 from .reservation import Reservation
 from .sport import Sport
@@ -10,9 +10,6 @@ from .tournoi import Tournoi
 from .game import Game
 from .paiement import Paiement
 from .role import Role
-
-# 2. Maintenant que tous les modèles sont enregistrés,
-# on peut définir les tables d'association
 from sqlalchemy import Column, Integer, String, ForeignKey, Table
 
 associer = db.Table(

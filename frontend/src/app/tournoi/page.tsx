@@ -68,7 +68,7 @@ export default function ListeTournois() {
           produit,
           client: clientEmail,
           statut: "Payé",
-          prix: "12",       // ou calcul dynamique
+          prix: "12",  
           mode: mode === "cash" ? "cash" : "online"
         })
       });

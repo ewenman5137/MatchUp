@@ -88,7 +88,7 @@ export default function ReservationForm() {
       heureDebut,
       heureFin,
       prix: price,
-      joueurs: emails, // ✅ juste les emails
+      joueurs: emails, 
       statutReservation: "confirmee",
     };
 

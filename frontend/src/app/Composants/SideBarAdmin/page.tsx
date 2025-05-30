@@ -19,7 +19,6 @@ export default function SidebarAdmin() {
   const [nomUtilisateur, setNomUtilisateur] = useState("Utilisateur");
 
   useEffect(() => {
-    // 🔁 Remplace par ta méthode d’auth : localStorage, session, API, etc.
     const nom = localStorage.getItem("nomUtilisateur") || "Admin";
     setNomUtilisateur(nom);
   }, []);

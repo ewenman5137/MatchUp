@@ -9,7 +9,7 @@ from routes.admin.dashboardAdmin import dashboard_bp
 from routes.admin.paiement import paiement_bp
 from routes.tournois import tournoi_bp
 from models import db
-from models.utilisateur import Utilisateur  # 👈 importe bien ici ton modèle
+from models.utilisateur import Utilisateur  
 from routes.participant_bp import participants_bp
 from routes.rencontre import rencontre_bp
 from routes.route_terrain import blocage_bp

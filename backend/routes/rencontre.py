@@ -12,14 +12,14 @@ rencontre_bp = Blueprint("rencontres", __name__)
 def proposer_rencontre():
     data = request.get_json()
     try:
-        # 🔍 Récupération de l'utilisateur à partir de son email
+        # Récupération de l'utilisateur à partir de son email
         email = data.get("email")
         utilisateur = Utilisateur.query.filter_by(email=email).first()
 
         if not utilisateur:
             return jsonify({"error": "Utilisateur introuvable"}), 404
 
-        # ✅ Création de la rencontre
+        # Création de la rencontre
         nouvelle = RencontreProposee(
             idJoueur1=utilisateur.idUser,
             sport=data["sport"],
@@ -62,7 +62,7 @@ def accepter_rencontre(id):
         if not rencontre or rencontre.statut != "en_attente":
             return jsonify({"error": "Rencontre non disponible"}), 400
 
-        # ✅ Récupérer utilisateur via email
+   
         email = data.get("email")
         utilisateur = Utilisateur.query.filter_by(email=email).first()
         if not utilisateur:

@@ -27,7 +27,6 @@ def ajouter_paiement():
         paiement = Paiement(
             produit        = data["produit"],
             montant        = float(data.get("prix", 0)),
-            # On combine ici le statut et le mode
             statutPaiement = f"{statut} ({'Cash' if mode=='cash' else 'En ligne'})",
             datePaiement   = datetime.utcnow().strftime("%Y-%m-%d %H:%M"),
             client         = client_email
@@ -68,7 +67,7 @@ def get_paiements():
             "produit": p.produit,
             "client":  client_display,
             "date":    p.datePaiement,
-            "statut":  p.statutPaiement,    # contiendra désormais e.g. "Payé (Cash)"
+            "statut":  p.statutPaiement,   
             "prix":    f"${p.montant:.2f}",
             "avatar":  "/avatar-placeholder.png"
         })
@@ -83,10 +82,8 @@ def modifier_paiement(id):
         return jsonify({"error": "Paiement introuvable"}), 404
     data = request.get_json() or {}
 
-    # Si on veut autoriser la modification du mode, on peut aussi lire
-    # data.get("mode") ici et le greffer au statutPaiement
+ 
     p.produit        = data.get("produit", p.produit)
-    # Exemple : on écrase tout le statut (+ mode) à la main
     if "statut" in data and "mode" in data:
         p.statutPaiement = f"{data['statut']} ({'Cash' if data['mode']=='cash' else 'En ligne'})"
     else:
