@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+    expose:
+      - "5000"
+    env_file:
+      - ./backend/.env
+    restart: unless-stopped
+    command: python run.py
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: ["npm", "run", "dev"]
+    depends_on:
+      - backend

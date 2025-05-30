@@ -1,0 +1,22 @@
+FROM node:20.12.2
+
+# Définir le répertoire de travail
+WORKDIR /app
+
+# Copier les fichiers de dépendances
+COPY package.json package-lock.json* ./
+
+# Installer les dépendances (en supprimant les devDependencies)
+RUN npm install --legacy-peer-deps
+
+# Copier tout le code
+COPY . .
+
+# Build Next.js
+RUN npm run build
+
+# Exposer le port utilisé par Next.js
+EXPOSE 3000
+
+# Lancer l'application en mode production
+CMD ["npm", "run", "start"]
